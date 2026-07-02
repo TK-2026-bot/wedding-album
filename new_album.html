@@ -39,31 +39,6 @@
     z-index:10;
   }
 
-  /* ---------- Dimmed topbar (backdrop of Albums screen behind sheet) ---------- */
-  .dim-topbar {
-    position:absolute; top:0; left:0; right:0; height:150px;
-    background:#949597;
-  }
-  .back-arrow {
-    position:absolute; top:80px; left:15px; width:22px; height:22px;
-    cursor:pointer;
-  }
-  .bg-title {
-    position:absolute; top:75px; left:0; right:0; text-align:center;
-    font-family:'Marcellus', Georgia, serif;
-    font-size:26px; color:#3A3A38; opacity:0.55;
-  }
-
-  /* ---------- Dimmed album cards backdrop (image, non-text) ---------- */
-  .cards-backdrop {
-    position:absolute; top:150px; left:0; width:100%; height:223px;
-    object-fit:cover; display:block;
-  }
-  .cards-dim-overlay {
-    position:absolute; top:0; left:0; right:0; bottom:0;
-    background:rgba(0,0,0,0.0);
-  }
-
   /* ---------- Bottom sheet ---------- */
   .sheet {
     position:absolute; top:373px; left:0; right:0; bottom:0;
@@ -144,31 +119,89 @@
           <h1>New Album</h1>
 
           <div class="field-label">Album Name</div>
-          <input class="name-input" type="text" placeholder="e.g. Beach Party">
+          <input class="name-input" id="album-name" type="text" placeholder="e.g. Beach Party">
 
           <div class="field-label">Cover Photo</div>
           <div class="cover-row">
-            <div class="cover-card cover-card--selected" onclick="sendPrompt('Select Auto cover photo')">
+            <button type="button" class="cover-card cover-card--selected" id="cover-auto" data-mode="auto">
               <div class="edit-badge">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
               </div>
               <div class="cover-icon cover-icon--auto"></div>
               <div class="cover-title">Auto</div>
-              <div class="cover-sub">Random photo</div>
-            </div>
-            <div class="cover-card" onclick="sendPrompt('Choose cover photo')">
+              <div class="cover-sub">First photo added</div>
+            </button>
+            <button type="button" class="cover-card" id="cover-choose" data-mode="choose">
               <div class="cover-icon cover-icon--choose"></div>
-              <div class="cover-title">Choose</div>
-              <div class="cover-sub">Pick later</div>
-            </div>
+              <div class="cover-title" id="cover-choose-title">Choose</div>
+              <div class="cover-sub" id="cover-choose-sub">Pick a photo now</div>
+            </button>
+            <input type="file" id="cover-file" accept="image/*" hidden>
           </div>
 
-          <button class="create-btn" href="albums.html">Create Album</a>
-          <button class="cancel-btn" href="albums.html">Cancel</a>
+          <button class="create-btn" type="button" id="create-btn">Create Album</button>
+          <button class="cancel-btn" type="button" onclick="window.location.href='albums.html'">Cancel</button>
+          <p class="login-error" id="new-album-error" style="color:#C24B3F;font-size:14px;text-align:center;"></p>
         </div>
 
       </main>
     </div>
   </div>
+
+  <script type="module">
+    import { requireAuth } from "./js/auth.js";
+    import { createAlbum, uploadPhoto } from "./js/data.js";
+
+    await requireAuth();
+
+    const autoCard = document.getElementById("cover-auto");
+    const chooseCard = document.getElementById("cover-choose");
+    const fileInput = document.getElementById("cover-file");
+    const chooseSub = document.getElementById("cover-choose-sub");
+    let coverMode = "auto";
+    let coverFile = null;
+
+    function selectMode(mode) {
+      coverMode = mode;
+      autoCard.classList.toggle("cover-card--selected", mode === "auto");
+      chooseCard.classList.toggle("cover-card--selected", mode === "choose");
+    }
+
+    autoCard.addEventListener("click", () => selectMode("auto"));
+    chooseCard.addEventListener("click", () => {
+      selectMode("choose");
+      fileInput.click();
+    });
+    fileInput.addEventListener("change", () => {
+      coverFile = fileInput.files[0] || null;
+      chooseSub.textContent = coverFile ? coverFile.name : "Pick a photo now";
+    });
+
+    const nameInput = document.getElementById("album-name");
+    const createBtn = document.getElementById("create-btn");
+    const errorEl = document.getElementById("new-album-error");
+
+    createBtn.addEventListener("click", async () => {
+      const name = nameInput.value.trim();
+      if (!name) {
+        errorEl.textContent = "Give the album a name";
+        return;
+      }
+      errorEl.textContent = "";
+      createBtn.disabled = true;
+      createBtn.textContent = "Creating…";
+      try {
+        const albumId = await createAlbum(name);
+        if (coverMode === "choose" && coverFile) {
+          await uploadPhoto(albumId, coverFile);
+        }
+        window.location.href = `album.html?id=${albumId}`;
+      } catch (err) {
+        errorEl.textContent = err.message || "Could not create the album";
+        createBtn.disabled = false;
+        createBtn.textContent = "Create Album";
+      }
+    });
+  </script>
 </body>
 </html>

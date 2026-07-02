@@ -4,219 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Albums — Mallorca Wedding</title>
-<style>
-/* ============================================================
-   Mallorca Wedding App — Design system (styles.css)
-   Значения строго по DESIGN_SPEC_reference.md
-   ============================================================ */
-
-@font-face {
-    font-family: 'Marcellus';
-    src: url(assets/fonts/marcellus.ttf) format('truetype');
-    font-display: swap;
-  }
-
-:root {
-  /* Палитра (spec §4) */
-  --bg:            #FEFEFD;
-  --bg-alt:        #FCFBF9;
-  --gold:          #E0BD6E;   /* акцент: кнопки, индикаторы, активный таб */
-  --gold-text:     #A88028;   /* золотой текст на светлом фоне */
-  --ink:           #1C1C1A;   /* основной текст */
-  --muted:         #8C8880;   /* приглушённый */
-  --muted-2:       #6E6E69;
-  --muted-3:       #A6A29A;   /* неактивные иконки */
-  --divider:       #E5E1D8;
-  --divider-2:     #ECE8E0;
-  --danger:        #C24B3F;   /* Delete */
-
-  /* Типографика */
-  --font-title: 'Marcellus', Georgia, serif;              /* заголовки экранов */
-  --font-ui: -apple-system, "Helvetica Neue", Arial, sans-serif;
-
-  /* Метрики (spec §2, §5) */
-  --topbar-h: 52px;
-  --nav-h: 62px;
-}
-
-* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-html, body { height: 100%; }
-
-body {
-  font-family: var(--font-ui);
-  color: var(--ink);
-  background: #d8d5ce;               /* фон вокруг «телефона» на десктопе */
-}
-
-/* Обёртка держит ширину (капается на 430px), высота считается ТОЛЬКО от
-   ширины через классический padding-trick — без dvh/vh/JS, поэтому
-   пропорция 390:844 не может "уехать" ни при каком окне/превью. */
-.phone-frame {
-  width: 100%;
-  max-width: 430px;
-  margin: 0 auto;
-}
-.phone-ratio-box {
-  position: relative;
-  width: 100%;
-  padding-top: 216.410%; /* 844/390*100 */
-}
-.app {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--bg);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* Notch — присутствует на КАЖДОМ полноэкранном мокапе (spec §5) */
-.notch {
-  position: absolute;
-  top: 9px; left: 50%;
-  transform: translateX(-50%);
-  width: 94.5px; height: 24px;
-  background: #0A0A0A;
-  border-radius: 12px;
-  z-index: 20;
-  pointer-events: none;
-}
-
-/* Прокручиваемая область контента (между верхом и нижней навигацией) */
-.screen {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* ---------- ВЕРХНЯЯ СТРОКА (topbar) — spec §2 ---------- */
-.topbar {
-  display: flex;
-  align-items: center;              /* все элементы на одной горизонтали */
-  justify-content: space-between;
-  gap: 8px;
-  padding: 14px 20px;
-  padding-top: max(44px, calc(14px + env(safe-area-inset-top)));
-  min-height: var(--topbar-h);
-}
-.topbar__side {
-  flex: 0 0 auto;
-  width: 40px;
-  display: flex;
-  align-items: center;
-}
-.topbar__side--right { justify-content: flex-end; }
-.topbar__title {
-  flex: 1;
-  text-align: center;
-  font-family: var(--font-title);
-  font-size: 26px;
-  font-weight: 400;
-  color: var(--ink);
-  line-height: 1;
-}
-.iconbtn {
-  background: none;
-  border: none;
-  color: var(--ink);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-}
-.iconbtn svg { display: block; }
-
-.divider {
-  height: 1px;
-  background: var(--divider);
-  border: none;
-}
-
-.meta-row {
-  text-align: center;
-  color: var(--muted);
-  font-size: 15px;
-  padding: 14px 0;
-}
-
-/* ---------- НИЖНЯЯ НАВИГАЦИЯ (spec §5) ---------- */
-.tabbar {
-  flex: 0 0 auto;
-  display: flex;
-  border-top: 1px solid var(--divider-2);
-  padding-bottom: env(safe-area-inset-bottom);
-  background: var(--bg);
-}
-.tab {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 10px 0 12px;      /* иконки заметно ниже линии-разделителя */
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--muted-3);
-  font-size: 12px;
-  font-family: var(--font-ui);
-  text-decoration: none;
-}
-.tab svg { display: block; }
-.tab.is-active { color: var(--gold-text); }
-
-/* ---------- КАРТОЧКИ-ПЛЕЙСХОЛДЕРЫ (spec §4, §5) ---------- */
-/* Градиенты имитируют будущие фото. border-radius 10px. */
-.ph {
-  border-radius: 10px;
-  position: relative;
-  background: linear-gradient(180deg, #C9B68C 0%, #6E8C95 55%, #16323F 100%);
-}
-.ph--blue  { background: linear-gradient(180deg, #BFE0EE 0%, #5B879B 55%, #16323F 100%); }
-.ph--teal  { background: linear-gradient(180deg, #9BC4D2 0%, #3E6B7C 60%, #16323F 100%); }
-
-/* ---------- FAB (spec §5): 56×56, золотая, с тенью ---------- */
-.fab {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--gold);
-  border: none;
-  color: var(--ink);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 6px 16px rgba(224,189,110,0.45);
-}
-
-.avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  border: 2px solid var(--bg);
-}
-
-/* доступность */
-:focus-visible { outline: 2px solid var(--gold-text); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) {
-  * { animation: none !important; transition: none !important; }
-}
-
-</style>
+<link rel="stylesheet" href="css/design-system.css">
 <style>
   .albums-head {
     display: flex;
@@ -261,33 +49,37 @@ body {
     text-decoration: none;
     overflow: hidden;
   }
+  .album-card img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    z-index: 0;
+  }
+  .album-card::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 50%, rgba(0,0,0,0.45) 100%);
+    z-index: 1;
+  }
   .album-card__title {
+    position: relative; z-index: 2;
     font-family: var(--font-title);
     font-size: 28px;
     color: #fff;
     text-shadow: 0 1px 6px rgba(0,0,0,0.28);
     text-align: center;
   }
-  /* пин-индикатор (spec): золотой = закреплён, белый контур = нет */
-  .pin {
-    position: absolute;
-    top: 14px; right: 14px;
-    width: 20px; height: 20px;
-    border-radius: 50%;
-  }
-  .pin--on  { background: var(--gold); box-shadow: 0 0 0 4px rgba(224,189,110,0.25); }
-  .pin--off { background: transparent; border: 2px solid rgba(255,255,255,0.9); }
-  /* бейдж авто-обложки */
-  .badge-auto {
-    position: absolute;
-    left: 14px; bottom: 52px;
-    background: rgba(0,0,0,0.72);
+  .badge-count {
+    position: absolute; z-index: 2;
+    left: 14px; bottom: 14px;
+    background: rgba(0,0,0,0.55);
     color: #fff;
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 600;
     padding: 5px 12px;
     border-radius: 14px;
   }
+  .empty-state { text-align: center; color: var(--muted); font-size: 15px; padding: 40px 32px; width: 100%; }
 
   .ph--mauve { background: linear-gradient(180deg, #C7A9B6 0%, #7C5866 55%, #2E1F27 100%); }
   .ph--green { background: linear-gradient(180deg, #AEC098 0%, #5E7049 55%, #2E3A22 100%); }
@@ -302,37 +94,12 @@ body {
 
       <header class="albums-head">
         <h1 class="albums-head__title">Albums</h1>
-        <button class="btn-new" type="button">+ New</a>
+        <button class="btn-new" type="button" onclick="window.location.href='new_album.html'">+ New</button>
       </header>
       <hr class="divider">
 
-      <section class="albums-grid">
-        <a class="album-card ph" href="album.html?name=Engagement">
-          <span class="pin pin--on"></span>
-          <span class="album-card__title">Engagement</span>
-        </a>
-        <a class="album-card ph--blue" href="album.html?name=Getting%20Ready">
-          <span class="pin pin--on"></span>
-          <span class="album-card__title">Getting Ready</span>
-        </a>
-        <a class="album-card ph" href="album.html?name=Ceremony">
-          <span class="pin pin--on"></span>
-          <span class="album-card__title">Ceremony</span>
-        </a>
-        <a class="album-card ph--teal" href="album.html?name=Guests">
-          <span class="pin pin--on"></span>
-          <span class="album-card__title">Guests</span>
-        </a>
-        <a class="album-card ph--mauve" href="album.html?name=Reception%20Party">
-          <span class="pin pin--off"></span>
-          <span class="badge-auto">auto cover</span>
-          <span class="album-card__title">Reception Party</span>
-        </a>
-        <a class="album-card ph--green" href="album.html?name=First%20Dance">
-          <span class="pin pin--off"></span>
-          <span class="badge-auto">auto cover</span>
-          <span class="album-card__title">First Dance</span>
-        </a>
+      <section class="albums-grid" id="albums-grid">
+        <p class="empty-state">Loading…</p>
       </section>
 
     </div>
@@ -350,7 +117,7 @@ body {
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg>
         <span>Search</span>
       </a>
-      <a class="tab" href="#">
+      <a class="tab" href="profile.html">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>
         <span>Profile</span>
       </a>
@@ -358,5 +125,34 @@ body {
   </main>
   </div>
 </div>
+
+  <script type="module">
+    import { requireAuth } from "./js/auth.js";
+    import { listAlbums } from "./js/data.js";
+
+    await requireAuth();
+
+    const PLACEHOLDER_CLASSES = ["ph", "ph--blue", "ph--teal", "ph--mauve", "ph--green"];
+
+    const grid = document.getElementById("albums-grid");
+    const albums = await listAlbums();
+
+    if (!albums.length) {
+      grid.innerHTML = '<p class="empty-state">No albums yet — create the first one.</p>';
+    } else {
+      grid.innerHTML = albums
+        .map((a, i) => {
+          const cls = PLACEHOLDER_CLASSES[i % PLACEHOLDER_CLASSES.length];
+          const cover = a.coverUrl ? `<img src="${a.coverUrl}" alt="">` : "";
+          const total = (a.photoCount || 0) + (a.videoCount || 0);
+          return `<a class="album-card ${a.coverUrl ? "" : cls}" href="album.html?id=${a.id}">
+            ${cover}
+            <span class="badge-count">${total} item${total === 1 ? "" : "s"}</span>
+            <span class="album-card__title">${a.name}</span>
+          </a>`;
+        })
+        .join("");
+    }
+  </script>
 </body>
 </html>

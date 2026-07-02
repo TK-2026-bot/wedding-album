@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /events/{eventId} {
+      // Access code must be publicly readable so the login screen can check
+      // it before the guest is signed in. Only edit event fields by hand
+      // in the Firebase console.
+      allow read: if true;
+      allow write: if false;
+
+      // Every signed-in guest is trusted (this is a single private wedding
+      // event, not a multi-tenant app), so any guest may manage any album
+      // or photo, not just their own.
+      match /albums/{albumId} {
+        allow read, create, update, delete: if request.auth != null;
+
+        match /photos/{photoId} {
+          allow read, create, delete: if request.auth != null;
+        }
+      }
+
+      match /guests/{uid} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+  }
+}

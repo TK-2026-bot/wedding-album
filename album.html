@@ -3,220 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Ceremony — Mallorca Wedding</title>
-<style>
-/* ============================================================
-   Mallorca Wedding App — Design system (styles.css)
-   Значения строго по DESIGN_SPEC_reference.md
-   ============================================================ */
-
-@font-face {
-    font-family: 'Marcellus';
-    src: url(assets/fonts/marcellus.ttf) format('truetype');
-    font-display: swap;
-  }
-
-:root {
-  /* Палитра (spec §4) */
-  --bg:            #FEFEFD;
-  --bg-alt:        #FCFBF9;
-  --gold:          #E0BD6E;   /* акцент: кнопки, индикаторы, активный таб */
-  --gold-text:     #A88028;   /* золотой текст на светлом фоне */
-  --ink:           #1C1C1A;   /* основной текст */
-  --muted:         #8C8880;   /* приглушённый */
-  --muted-2:       #6E6E69;
-  --muted-3:       #A6A29A;   /* неактивные иконки */
-  --divider:       #E5E1D8;
-  --divider-2:     #ECE8E0;
-  --danger:        #C24B3F;   /* Delete */
-
-  /* Типографика */
-  --font-title: 'Marcellus', Georgia, serif;              /* заголовки экранов */
-  --font-ui: -apple-system, "Helvetica Neue", Arial, sans-serif;
-
-  /* Метрики (spec §2, §5) */
-  --topbar-h: 52px;
-  --nav-h: 62px;
-}
-
-* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-html, body { height: 100%; }
-
-body {
-  font-family: var(--font-ui);
-  color: var(--ink);
-  background: #d8d5ce;               /* фон вокруг «телефона» на десктопе */
-}
-
-/* Обёртка держит ширину (капается на 430px), высота считается ТОЛЬКО от
-   ширины через классический padding-trick — без dvh/vh/JS, поэтому
-   пропорция 390:844 не может "уехать" ни при каком окне/превью. */
-.phone-frame {
-  width: 100%;
-  max-width: 430px;
-  margin: 0 auto;
-}
-.phone-ratio-box {
-  position: relative;
-  width: 100%;
-  padding-top: 216.410%; /* 844/390*100 */
-}
-.app {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--bg);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* Notch — присутствует на КАЖДОМ полноэкранном мокапе (spec §5) */
-.notch {
-  position: absolute;
-  top: 9px; left: 50%;
-  transform: translateX(-50%);
-  width: 94.5px; height: 24px;
-  background: #0A0A0A;
-  border-radius: 12px;
-  z-index: 20;
-  pointer-events: none;
-}
-
-/* Прокручиваемая область контента (между верхом и нижней навигацией) */
-.screen {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* ---------- ВЕРХНЯЯ СТРОКА (topbar) — spec §2 ---------- */
-.topbar {
-  display: flex;
-  align-items: center;              /* все элементы на одной горизонтали */
-  justify-content: space-between;
-  gap: 8px;
-  padding: 14px 20px;
-  padding-top: max(44px, calc(14px + env(safe-area-inset-top)));
-  min-height: var(--topbar-h);
-}
-.topbar__side {
-  flex: 0 0 auto;
-  width: 40px;
-  display: flex;
-  align-items: center;
-}
-.topbar__side--right { justify-content: flex-end; }
-.topbar__title {
-  flex: 1;
-  text-align: center;
-  font-family: var(--font-title);
-  font-size: 26px;
-  font-weight: 400;
-  color: var(--ink);
-  line-height: 1;
-}
-.iconbtn {
-  background: none;
-  border: none;
-  color: var(--ink);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-}
-.iconbtn svg { display: block; }
-
-.divider {
-  height: 1px;
-  background: var(--divider);
-  border: none;
-}
-
-.meta-row {
-  text-align: center;
-  color: var(--muted);
-  font-size: 15px;
-  padding: 14px 0;
-}
-
-/* ---------- НИЖНЯЯ НАВИГАЦИЯ (spec §5) ---------- */
-.tabbar {
-  flex: 0 0 auto;
-  display: flex;
-  border-top: 1px solid var(--divider-2);
-  padding-bottom: env(safe-area-inset-bottom);
-  background: var(--bg);
-}
-.tab {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 10px 0 12px;      /* иконки заметно ниже линии-разделителя */
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--muted-3);
-  font-size: 12px;
-  font-family: var(--font-ui);
-  text-decoration: none;
-}
-.tab svg { display: block; }
-.tab.is-active { color: var(--gold-text); }
-
-/* ---------- КАРТОЧКИ-ПЛЕЙСХОЛДЕРЫ (spec §4, §5) ---------- */
-/* Градиенты имитируют будущие фото. border-radius 10px. */
-.ph {
-  border-radius: 10px;
-  position: relative;
-  background: linear-gradient(180deg, #C9B68C 0%, #6E8C95 55%, #16323F 100%);
-}
-.ph--blue  { background: linear-gradient(180deg, #BFE0EE 0%, #5B879B 55%, #16323F 100%); }
-.ph--teal  { background: linear-gradient(180deg, #9BC4D2 0%, #3E6B7C 60%, #16323F 100%); }
-
-/* ---------- FAB (spec §5): 56×56, золотая, с тенью ---------- */
-.fab {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--gold);
-  border: none;
-  color: var(--ink);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 6px 16px rgba(224,189,110,0.45);
-}
-
-.avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  border: 2px solid var(--bg);
-}
-
-/* доступность */
-:focus-visible { outline: 2px solid var(--gold-text); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) {
-  * { animation: none !important; transition: none !important; }
-}
-
-</style>
+<title>Album — Mallorca Wedding</title>
+<link rel="stylesheet" href="css/design-system.css">
 <style>
   .photo-grid {
     display: flex;
@@ -227,6 +15,12 @@ body {
   .photo-grid .ph {
     flex: 0 0 calc((100% - 17.2px) / 3);
     aspect-ratio: 1 / 1.05;
+    overflow: hidden;
+  }
+  .photo-grid .ph img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
   }
   .play {
     position: absolute;
@@ -235,6 +29,12 @@ body {
     border-radius: 50%;
     background: rgba(0,0,0,0.55);
     display: flex; align-items: center; justify-content: center;
+  }
+  .empty-state {
+    text-align: center;
+    color: var(--muted);
+    font-size: 15px;
+    padding: 40px 32px;
   }
 
   .album-footer {
@@ -290,6 +90,33 @@ body {
     padding: 16px; font-size: 16px; font-weight: 700; color: var(--muted-2);
     font-family: var(--font-ui); cursor: pointer;
   }
+
+  /* ---------- Upload progress panel ---------- */
+  .upload-panel {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: var(--bg);
+    border-top: 1px solid var(--divider-2);
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -6px 20px rgba(0,0,0,0.08);
+    padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+    transform: translateY(100%);
+    transition: transform .25s ease;
+    z-index: 22;
+    max-height: 55%;
+    overflow-y: auto;
+  }
+  .upload-panel.is-open { transform: translateY(0); }
+  .upload-panel__title { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+  .upload-item + .upload-item { margin-top: 12px; }
+  .upload-item__row {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 14px; margin-bottom: 6px;
+  }
+  .upload-item__status--done { color: #4C8B5A; }
+  .upload-item__status--busy { color: var(--gold-text); }
+  .upload-item__status--error { color: var(--danger); }
+  .upload-bar { height: 5px; border-radius: 3px; background: var(--divider-2); overflow: hidden; }
+  .upload-bar__fill { height: 100%; border-radius: 3px; background: var(--gold); transition: width .2s ease; }
 </style>
 </head>
 <body>
@@ -299,51 +126,32 @@ body {
     <div class="notch"></div>
     <div class="screen">
 
-      <!-- topbar: back / Ceremony / ••• (все на одной горизонтали) -->
       <div class="topbar">
         <div class="topbar__side">
           <a class="iconbtn" href="albums.html" aria-label="Back">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
           </a>
         </div>
-        <div class="topbar__title">Ceremony</div>
+        <div class="topbar__title" id="album-title">…</div>
         <div class="topbar__side topbar__side--right">
-          <button class="iconbtn" type="button" aria-label="More" onclick="alert('Select — режим множественного выбора')">
+          <button class="iconbtn" type="button" aria-label="Select" id="select-btn">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>
-          </a>
+          </button>
         </div>
       </div>
       <hr class="divider">
-      <div class="meta-row">48 photos · 6 videos</div>
+      <div class="meta-row" id="album-meta">Loading…</div>
 
-      <!-- сетка 3 колонки, play на видео -->
-      <section class="photo-grid">
-        <a class="ph" href="photo-viewer.html" style="text-decoration:none;display:block;"></a>
-        <a class="ph ph--blue" href="photo-viewer.html" style="text-decoration:none;display:block;"></a>
-        <a class="ph" href="photo-viewer.html" style="text-decoration:none;display:block;"><span class="play"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M7 5l12 7-12 7z"/></svg></span></a>
-        <button class="ph ph--teal" href="photo-viewer.html" style="border:none;background:inherit;cursor:pointer;"></a>
-        <a class="ph" href="photo-viewer.html" style="text-decoration:none;display:block;"></a>
-        <a class="ph ph--blue" href="photo-viewer.html" style="text-decoration:none;display:block;"></a>
-        <a class="ph" href="photo-viewer.html" style="text-decoration:none;display:block;"><span class="play"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M7 5l12 7-12 7z"/></svg></span></a>
-        <a class="ph ph--blue" href="photo-viewer.html" style="text-decoration:none;display:block;"></a>
-        <a class="ph" href="photo-viewer.html" style="text-decoration:none;display:block;"></a>
-        <a class="ph ph--teal" href="photo-viewer.html" style="text-decoration:none;display:block;"><span class="play"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M7 5l12 7-12 7z"/></svg></span></a>
-        <a class="ph" href="photo-viewer.html" style="text-decoration:none;display:block;"></a>
-      </section>
+      <section class="photo-grid" id="photo-grid"></section>
 
-      <!-- Recently added by + FAB -->
       <footer class="album-footer">
         <div class="recently">
           <div class="recently__label">Recently added by</div>
-          <div class="recently__avatars">
-            <span class="avatar" style="background:#8FAEB8">M</span>
-            <span class="avatar" style="background:#B9A98F">C</span>
-            <span class="avatar" style="background:#3E6B82">A</span>
-          </div>
+          <div class="recently__avatars" id="recently-avatars"></div>
         </div>
-        <button class="fab" href="upload_sheet.html" style="cursor:pointer;" type="button" aria-label="Add photo or video" onclick="openSheet()">
+        <button class="fab" type="button" aria-label="Add photo or video" onclick="openSheet()">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-        </a>
+        </button>
       </footer>
 
     </div>
@@ -361,35 +169,181 @@ body {
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg>
         <span>Search</span>
       </a>
-      <a class="tab" href="#">
+      <a class="tab" href="profile.html">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>
         <span>Profile</span>
       </a>
     </nav>
 
-    <!-- Шторка «Add to Ceremony» -->
+    <!-- Шторка «Add to <album>» -->
     <div class="sheet-scrim" id="scrim" onclick="if(event.target===this)closeSheet()">
-      <div class="sheet" role="dialog" aria-label="Add to Ceremony">
+      <div class="sheet" role="dialog" aria-label="Add to album">
         <div class="sheet__handle"></div>
-        <div class="sheet__title">Add to Ceremony</div>
-        <button class="sheet__opt" type="button">
+        <div class="sheet__title">Add photos</div>
+        <button class="sheet__opt" type="button" id="opt-camera">
           <span class="sheet__ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="7" width="18" height="13" rx="2.5"/><circle cx="12" cy="13.5" r="3.4"/><path d="M8 7l1.5-2.5h5L16 7"/></svg></span>
           Take Photo or Video
-        </a>
-        <button class="sheet__opt" type="button">
+        </button>
+        <button class="sheet__opt" type="button" id="opt-gallery">
           <span class="sheet__ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="10" r="1.6"/><path d="M4 17l5-4 4 3 3-2.5 4 3.5"/></svg></span>
           Choose from Gallery
-        </a>
-        <button class="sheet__cancel" type="button" onclick="closeSheet()">Cancel</a>
+        </button>
+        <button class="sheet__cancel" type="button" onclick="closeSheet()">Cancel</button>
       </div>
+    </div>
+
+    <input type="file" id="file-camera" accept="image/*,video/*" capture="environment" hidden>
+    <input type="file" id="file-gallery" accept="image/*,video/*" multiple hidden>
+
+    <div class="upload-panel" id="upload-panel">
+      <div class="upload-panel__title" id="upload-panel-title">Uploading…</div>
+      <div id="upload-items"></div>
     </div>
   </main>
   </div>
-</div>
+  </div>
 
-  <script>
-    function openSheet(){ document.getElementById('scrim').classList.add('is-open'); }
-    function closeSheet(){ document.getElementById('scrim').classList.remove('is-open'); }
+  <script type="module">
+    import { requireAuth } from "./js/auth.js";
+    import { getAlbum, listPhotos, uploadPhoto } from "./js/data.js";
+
+    await requireAuth();
+
+    const params = new URLSearchParams(window.location.search);
+    const albumId = params.get("id");
+    if (!albumId) {
+      window.location.href = "albums.html";
+      throw new Error("Missing album id");
+    }
+
+    window.openSheet = () => document.getElementById("scrim").classList.add("is-open");
+    window.closeSheet = () => document.getElementById("scrim").classList.remove("is-open");
+
+    document.getElementById("select-btn").addEventListener("click", () => {
+      window.location.href = `multiselect.html?id=${albumId}`;
+    });
+
+    const grid = document.getElementById("photo-grid");
+    const titleEl = document.getElementById("album-title");
+    const metaEl = document.getElementById("album-meta");
+    const avatarsEl = document.getElementById("recently-avatars");
+
+    const AVATAR_COLORS = ["#8FAEB8", "#B9A98F", "#3E6B82", "#C9A0A0", "#7C9473"];
+
+    function renderPhotos(photos) {
+      if (!photos.length) {
+        grid.innerHTML = '<p class="empty-state">No photos yet — tap the + button to add the first one.</p>';
+        return;
+      }
+      grid.innerHTML = photos
+        .map((p, i) => {
+          const cls = i % 3 === 1 ? "ph ph--blue" : i % 3 === 2 ? "ph ph--teal" : "ph";
+          const play = p.type === "video"
+            ? '<span class="play"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M7 5l12 7-12 7z"/></svg></span>'
+            : "";
+          return `<a class="${cls}" style="position:relative;text-decoration:none;display:block;" href="photo-viewer.html?albumId=${albumId}&photoId=${p.id}">
+            <img src="${p.url}" loading="lazy" alt="">
+            ${play}
+          </a>`;
+        })
+        .join("");
+    }
+
+    function renderAvatars(photos) {
+      const seen = new Map();
+      for (const p of photos) {
+        if (p.uploadedByName && !seen.has(p.uploadedByName)) {
+          seen.set(p.uploadedByName, true);
+        }
+        if (seen.size >= 3) break;
+      }
+      const names = [...seen.keys()];
+      avatarsEl.innerHTML = names
+        .map((n, i) => `<span class="avatar" style="background:${AVATAR_COLORS[i % AVATAR_COLORS.length]}">${n.charAt(0).toUpperCase()}</span>`)
+        .join("");
+    }
+
+    let photosCache = [];
+
+    async function refresh() {
+      const [album, photos] = await Promise.all([getAlbum(albumId), listPhotos(albumId)]);
+      if (!album) {
+        window.location.href = "albums.html";
+        return;
+      }
+      titleEl.textContent = album.name;
+      document.title = `${album.name} — Mallorca Wedding`;
+      const photoCount = photos.filter((p) => p.type !== "video").length;
+      const videoCount = photos.filter((p) => p.type === "video").length;
+      metaEl.textContent = `${photoCount} photos · ${videoCount} videos`;
+      photosCache = photos;
+      renderPhotos(photos);
+      renderAvatars(photos);
+    }
+
+    refresh();
+
+    // ---- Upload flow ----
+    const uploadPanel = document.getElementById("upload-panel");
+    const uploadItems = document.getElementById("upload-items");
+    const uploadPanelTitle = document.getElementById("upload-panel-title");
+
+    document.getElementById("opt-camera").addEventListener("click", () => {
+      closeSheet();
+      document.getElementById("file-camera").click();
+    });
+    document.getElementById("opt-gallery").addEventListener("click", () => {
+      closeSheet();
+      document.getElementById("file-gallery").click();
+    });
+
+    async function handleFiles(fileList) {
+      const files = [...fileList];
+      if (!files.length) return;
+
+      uploadPanelTitle.textContent = `Uploading ${files.length} item${files.length > 1 ? "s" : ""}…`;
+      uploadItems.innerHTML = files
+        .map(
+          (f, i) => `<div class="upload-item" id="upload-item-${i}">
+            <div class="upload-item__row">
+              <span>${f.name}</span>
+              <span class="upload-item__status upload-item__status--busy" id="upload-status-${i}">0%</span>
+            </div>
+            <div class="upload-bar"><div class="upload-bar__fill" id="upload-fill-${i}" style="width:0%"></div></div>
+          </div>`
+        )
+        .join("");
+      uploadPanel.classList.add("is-open");
+
+      await Promise.all(
+        files.map((file, i) =>
+          uploadPhoto(albumId, file, (fraction) => {
+            document.getElementById(`upload-fill-${i}`).style.width = `${Math.round(fraction * 100)}%`;
+            document.getElementById(`upload-status-${i}`).textContent = `${Math.round(fraction * 100)}%`;
+          })
+            .then(() => {
+              document.getElementById(`upload-status-${i}`).textContent = "Done";
+              document.getElementById(`upload-status-${i}`).className = "upload-item__status upload-item__status--done";
+            })
+            .catch(() => {
+              document.getElementById(`upload-status-${i}`).textContent = "Failed";
+              document.getElementById(`upload-status-${i}`).className = "upload-item__status upload-item__status--error";
+            })
+        )
+      );
+
+      await refresh();
+      setTimeout(() => uploadPanel.classList.remove("is-open"), 1200);
+    }
+
+    document.getElementById("file-camera").addEventListener("change", (e) => {
+      handleFiles(e.target.files);
+      e.target.value = "";
+    });
+    document.getElementById("file-gallery").addEventListener("change", (e) => {
+      handleFiles(e.target.files);
+      e.target.value = "";
+    });
   </script>
 </body>
 </html>

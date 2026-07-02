@@ -37,8 +37,6 @@
     padding-top:calc(14px + env(safe-area-inset-top));
     min-height:52px;
   }
-  /* NOTE: for iPhone-frame presentation screenshots, override .topbar padding-top to 44px
-     (simulated notch clearance) to match page3/5 reference exactly. Real devices use env() above. */
   .topbar__side { flex:0 0 auto; min-width:44px; display:flex; align-items:center; }
   .topbar__side--right { justify-content:flex-end; }
   .topbar__title {
@@ -55,7 +53,6 @@
     padding:4px; white-space:nowrap;
     display:inline-flex; align-items:center; justify-content:center;
     line-height:1;
-    margin-top:9px;
   }
 
   .divider { height:1px; background:#E5E1D8; border:none; }
@@ -78,10 +75,10 @@
     aspect-ratio:1 / 1.05;
     border-radius:10px;
     overflow:hidden;
+    cursor:pointer;
+    background:#ECE7DC;
   }
-  .ph  { background:linear-gradient(180deg,#C9B68C 0%,#6E8C95 55%,#16323F 100%); }
-  .ph--blue { background:linear-gradient(180deg,#BFE0EE 0%,#5B879B 55%,#16323F 100%); }
-  .ph--teal { background:linear-gradient(180deg,#9BC4D2 0%,#3E6B7C 60%,#16323F 100%); }
+  .photo-grid .tile img { width:100%; height:100%; object-fit:cover; display:block; }
 
   .tile__check {
     position:absolute; top:8px; right:8px;
@@ -89,7 +86,9 @@
     display:flex; align-items:center; justify-content:center;
   }
   .tile__check--on { background:#E0BD6E; box-shadow:0 1px 4px rgba(0,0,0,0.25); }
-  .tile__check--off { background:rgba(0,0,0,0.08); border:2px solid rgba(255,255,255,0.9); }
+  .tile__check--off { background:rgba(0,0,0,0.35); border:2px solid rgba(255,255,255,0.9); }
+
+  .empty-state { text-align:center; color:#8C8880; font-size:15px; padding:40px 32px; }
 
   .ms-actionbar {
     flex:0 0 auto; display:flex;
@@ -103,8 +102,22 @@
     font-size:12px; font-weight:400; color:#A6A29A;
     font-family:-apple-system,"Helvetica Neue",Arial,sans-serif;
   }
+  .ms-action:disabled { opacity:.4; cursor:default; }
   .ms-action--delete { color:#C24B3F; }
   .ms-action svg { display:block; }
+
+  .move-overlay {
+    position:absolute; inset:0; z-index:5;
+    background:rgba(0,0,0,0.5);
+    display:none; align-items:flex-end;
+  }
+  .move-overlay.is-open { display:flex; }
+  .move-sheet { width:100%; background:#FEFEFD; border-radius:20px 20px 0 0; padding:20px 24px calc(24px + env(safe-area-inset-bottom)); }
+  .move-sheet h2 { font-family:'Marcellus', Georgia, serif; font-size:20px; margin-bottom:14px; text-align:center; }
+  .move-sheet select { width:100%; padding:14px; border-radius:12px; border:1px solid #ECE8E0; font-size:16px; margin-bottom:14px; }
+  .move-sheet button { width:100%; padding:14px; border:none; border-radius:14px; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .move-confirm { background:#E0BD6E; color:#1C1C1A; margin-bottom:10px; }
+  .move-cancel { background:#F1EDE5; color:#6E6E69; }
 </style>
 </head>
 <body>
@@ -112,58 +125,173 @@
     <div class="screen">
 
       <div class="topbar">
-        <div class="topbar__side">
-          <button class="iconbtn" aria-label="Back">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
-          </button>
-        </div>
-        <div class="topbar__title"><a href="album.html" style="text-decoration:none;color:inherit;">←</a>
-        <span style="flex:1;text-align:center;">Ceremony</span></div>
+        <div class="topbar__side"></div>
+        <div class="topbar__title" id="title">Select</div>
         <div class="topbar__side topbar__side--right">
-          <button class="btn-text">Cancel</button>
+          <button class="btn-text" id="cancel-btn">Cancel</button>
         </div>
       </div>
       <hr class="divider">
 
       <div class="select-row">
-        <span class="select-row__count">10 selected</span>
-        <button class="select-row__all">Select all</button>
+        <span class="select-row__count" id="count-label">0 selected</span>
+        <button class="select-row__all" id="select-all-btn">Select all</button>
       </div>
 
-      <section class="photo-grid">
-        <div class="tile ph"><span class="tile__check tile__check--on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span></div>
-        <div class="tile ph--blue"><span class="tile__check tile__check--on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span></div>
-        <div class="tile ph"><span class="tile__check tile__check--off"></span></div>
-
-        <div class="tile ph--blue"><span class="tile__check tile__check--on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span></div>
-        <div class="tile ph"><span class="tile__check tile__check--on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span></div>
-        <div class="tile ph--teal"><span class="tile__check tile__check--on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span></div>
-
-        <div class="tile ph"><span class="tile__check tile__check--on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span></div>
-        <div class="tile ph--blue"><span class="tile__check tile__check--on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span></div>
-        <div class="tile ph"><span class="tile__check tile__check--on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span></div>
-
-        <div class="tile ph--blue"><span class="tile__check tile__check--on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span></div>
-        <div class="tile ph"><span class="tile__check tile__check--on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span></div>
-      </section>
-
+      <section class="photo-grid" id="photo-grid"></section>
     </div>
 
     <footer class="ms-actionbar">
-      <button class="ms-action">
+      <button class="ms-action" id="action-save" disabled>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12m0 0l-4-4m4 4l4-4"/><path d="M5 18h14"/></svg>
         Save
       </button>
-      <button class="ms-action">
+      <button class="ms-action" id="action-move" disabled>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h11m0 0l-3-3m3 3l-3 3"/><path d="M20 17H9m0 0l3-3m-3 3l3 3"/></svg>
         Move to&hellip;
       </button>
-      <button class="ms-action ms-action--delete">
+      <button class="ms-action ms-action--delete" id="action-delete" disabled>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4.5A1.5 1.5 0 0110.5 3h3A1.5 1.5 0 0115 4.5V7"/><path d="M18.5 7l-.8 12.1a2 2 0 01-2 1.9H8.3a2 2 0 01-2-1.9L5.5 7"/><path d="M10 11v6M14 11v6"/></svg>
         Delete
       </button>
     </footer>
 
+    <div class="move-overlay" id="move-overlay">
+      <div class="move-sheet">
+        <h2>Move to…</h2>
+        <select id="move-select"></select>
+        <button class="move-confirm" id="move-confirm" type="button">Move</button>
+        <button class="move-cancel" id="move-cancel" type="button">Cancel</button>
+      </div>
+    </div>
   </main>
+
+  <script type="module">
+    import { requireAuth } from "./js/auth.js";
+    import { getAlbum, listPhotos, deletePhoto, movePhoto, listAlbums } from "./js/data.js";
+
+    await requireAuth();
+
+    const params = new URLSearchParams(window.location.search);
+    const albumId = params.get("id");
+    if (!albumId) {
+      window.location.href = "albums.html";
+      throw new Error("Missing album id");
+    }
+
+    document.getElementById("cancel-btn").addEventListener("click", () => {
+      window.location.href = `album.html?id=${albumId}`;
+    });
+
+    const grid = document.getElementById("photo-grid");
+    const countLabel = document.getElementById("count-label");
+    const selectAllBtn = document.getElementById("select-all-btn");
+    const saveBtn = document.getElementById("action-save");
+    const moveBtn = document.getElementById("action-move");
+    const deleteBtn = document.getElementById("action-delete");
+
+    const album = await getAlbum(albumId);
+    document.getElementById("title").textContent = album ? album.name : "Select";
+
+    let photos = await listPhotos(albumId);
+    const selected = new Set();
+
+    function renderGrid() {
+      if (!photos.length) {
+        grid.innerHTML = '<p class="empty-state">No photos in this album yet.</p>';
+        return;
+      }
+      grid.innerHTML = photos
+        .map((p) => {
+          const on = selected.has(p.id);
+          return `<div class="tile" data-id="${p.id}">
+            <img src="${p.url}" loading="lazy" alt="">
+            <span class="tile__check ${on ? "tile__check--on" : "tile__check--off"}">
+              ${on ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>' : ""}
+            </span>
+          </div>`;
+        })
+        .join("");
+      grid.querySelectorAll(".tile").forEach((tile) => {
+        tile.addEventListener("click", () => toggle(tile.dataset.id));
+      });
+    }
+
+    function toggle(id) {
+      if (selected.has(id)) selected.delete(id);
+      else selected.add(id);
+      updateUI();
+    }
+
+    function updateUI() {
+      countLabel.textContent = `${selected.size} selected`;
+      const hasSelection = selected.size > 0;
+      saveBtn.disabled = !hasSelection;
+      moveBtn.disabled = !hasSelection;
+      deleteBtn.disabled = !hasSelection;
+      renderGrid();
+    }
+
+    selectAllBtn.addEventListener("click", () => {
+      if (selected.size === photos.length) {
+        selected.clear();
+      } else {
+        photos.forEach((p) => selected.add(p.id));
+      }
+      updateUI();
+    });
+
+    saveBtn.addEventListener("click", () => {
+      photos
+        .filter((p) => selected.has(p.id))
+        .forEach((p) => {
+          const a = document.createElement("a");
+          a.href = p.url;
+          a.download = "";
+          a.target = "_blank";
+          a.rel = "noopener";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        });
+    });
+
+    deleteBtn.addEventListener("click", async () => {
+      if (!confirm(`Delete ${selected.size} item(s)? This cannot be undone.`)) return;
+      const toDelete = photos.filter((p) => selected.has(p.id));
+      deleteBtn.disabled = true;
+      await Promise.all(toDelete.map((p) => deletePhoto(albumId, p)));
+      photos = photos.filter((p) => !selected.has(p.id));
+      selected.clear();
+      updateUI();
+    });
+
+    const moveOverlay = document.getElementById("move-overlay");
+    const moveSelect = document.getElementById("move-select");
+
+    moveBtn.addEventListener("click", async () => {
+      const albums = (await listAlbums()).filter((a) => a.id !== albumId);
+      if (!albums.length) {
+        alert("No other albums to move to yet");
+        return;
+      }
+      moveSelect.innerHTML = albums.map((a) => `<option value="${a.id}">${a.name}</option>`).join("");
+      moveOverlay.classList.add("is-open");
+    });
+    document.getElementById("move-cancel").addEventListener("click", () => {
+      moveOverlay.classList.remove("is-open");
+    });
+    document.getElementById("move-confirm").addEventListener("click", async () => {
+      const targetAlbumId = moveSelect.value;
+      const toMove = photos.filter((p) => selected.has(p.id));
+      moveOverlay.classList.remove("is-open");
+      await Promise.all(toMove.map((p) => movePhoto(albumId, targetAlbumId, p)));
+      photos = photos.filter((p) => !selected.has(p.id));
+      selected.clear();
+      updateUI();
+    });
+
+    updateUI();
+  </script>
 </body>
 </html>
