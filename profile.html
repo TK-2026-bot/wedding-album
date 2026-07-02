@@ -49,8 +49,28 @@
     border: 3px solid rgba(255,255,255,0.85);
   }
   .profile-name { font-family: var(--font-title); font-size: 22px; color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,0.35); }
+  .role-badge {
+    display: none;
+    margin-top: 10px;
+    padding: 5px 14px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .role-badge.is-visible { display: inline-block; }
+  .role-badge--admin { background: var(--gold); color: var(--ink); }
+  .role-badge--guest { background: rgba(255,255,255,0.85); color: var(--muted-2); }
 
-  .settings-list { padding: 12px 28px 20px; }
+  .settings-section + .settings-section { margin-top: 4px; }
+  .settings-section__label {
+    padding: 14px 28px 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  .settings-list { padding: 0 28px 8px; }
   .settings-row {
     display: flex; align-items: center; justify-content: space-between;
     width: 100%;
@@ -77,11 +97,12 @@
   }
   .members-list.is-open { display: block; }
   .members-list__row {
-    display: flex; align-items: center; gap: 10px;
+    display: flex; align-items: center; justify-content: space-between;
     padding: 10px 4px;
     font-size: 15px;
   }
   .members-list__row + .members-list__row { border-top: 1px solid var(--divider-2); }
+  .members-list__role { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
 
   .toast {
     position: absolute;
@@ -137,28 +158,43 @@
         <div class="profile-header">
           <div class="profile-avatar" id="profile-avatar">?</div>
           <div class="profile-name" id="profile-name">…</div>
+          <span class="role-badge" id="role-badge"></span>
         </div>
       </div>
 
-      <div class="settings-list">
-        <button class="settings-row" type="button" id="row-language">
-          <span data-i18n="profile.language">Language</span>
-          <span class="settings-row__value" id="language-value">English</span>
-        </button>
-        <button class="settings-row" type="button" id="row-invite">
-          <span data-i18n="profile.invite">Invite links</span>
-          <span class="settings-row__value" data-i18n="profile.copy">Copy</span>
-        </button>
-        <button class="settings-row" type="button" id="row-members">
-          <span data-i18n="profile.members">Manage members</span>
-          <span class="settings-row__value" id="members-count">…</span>
-        </button>
-        <button class="settings-row settings-row--danger" type="button" id="row-logout" data-i18n="profile.logout">
-          Log out
-        </button>
+      <div class="settings-section">
+        <div class="settings-section__label" data-i18n="profile.sectionPreferences">PREFERENCES</div>
+        <div class="settings-list">
+          <button class="settings-row" type="button" id="row-language">
+            <span data-i18n="profile.language">Language</span>
+            <span class="settings-row__value" id="language-value">English</span>
+          </button>
+        </div>
       </div>
 
-      <div class="members-list" id="members-list"></div>
+      <div class="settings-section" id="admin-tools-section" style="display:none;">
+        <div class="settings-section__label" data-i18n="profile.sectionAdminTools">ADMIN TOOLS</div>
+        <div class="settings-list">
+          <button class="settings-row" type="button" id="row-invite">
+            <span data-i18n="profile.invite">Invite links</span>
+            <span class="settings-row__value" data-i18n="profile.copy">Copy</span>
+          </button>
+          <button class="settings-row" type="button" id="row-members">
+            <span data-i18n="profile.members">Manage members</span>
+            <span class="settings-row__value" id="members-count">…</span>
+          </button>
+        </div>
+        <div class="members-list" id="members-list"></div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section__label" data-i18n="profile.sectionAccount">ACCOUNT</div>
+        <div class="settings-list">
+          <button class="settings-row settings-row--danger" type="button" id="row-logout" data-i18n="profile.logout">
+            Log out
+          </button>
+        </div>
+      </div>
     </div>
 
     <nav class="tabbar">
@@ -195,15 +231,25 @@
 
   <script type="module">
     import { requireAuth, getGuestName, signOutGuest } from "./js/auth.js";
-    import { listGuests } from "./js/data.js";
+    import { listGuests, getGuest } from "./js/data.js";
     import { applyTranslations, t, getLang, setLang, LANGUAGES } from "./js/i18n.js";
 
     applyTranslations();
-    await requireAuth();
+    const user = await requireAuth();
 
     const name = getGuestName();
     document.getElementById("profile-name").textContent = name;
     document.getElementById("profile-avatar").textContent = name.charAt(0).toUpperCase();
+
+    const roleBadge = document.getElementById("role-badge");
+    const adminToolsSection = document.getElementById("admin-tools-section");
+    getGuest(user.uid).then((me) => {
+      const isAdmin = me?.role === "admin";
+      roleBadge.textContent = t(isAdmin ? "profile.roleAdmin" : "profile.roleGuest");
+      roleBadge.className = `role-badge is-visible role-badge--${isAdmin ? "admin" : "guest"}`;
+      adminToolsSection.style.display = isAdmin ? "" : "none";
+      if (isAdmin) loadGuests().catch(() => { membersCount.textContent = "—"; });
+    });
 
     const toast = document.getElementById("toast");
     function showToast(message) {
@@ -233,7 +279,12 @@
       const guests = await listGuests();
       membersCount.textContent = String(guests.length);
       membersList.innerHTML = guests
-        .map((g) => `<div class="members-list__row">${escapeHtml(g.name || "Guest")}</div>`)
+        .map(
+          (g) => `<div class="members-list__row">
+            <span>${escapeHtml(g.name || "Guest")}</span>
+            <span class="members-list__role">${t(g.role === "admin" ? "profile.roleAdmin" : "profile.roleGuest")}</span>
+          </div>`
+        )
         .join("");
     }
 
@@ -242,8 +293,6 @@
       div.textContent = str;
       return div.innerHTML;
     }
-
-    loadGuests().catch(() => { membersCount.textContent = "—"; });
 
     document.getElementById("row-members").addEventListener("click", () => {
       membersList.classList.toggle("is-open");

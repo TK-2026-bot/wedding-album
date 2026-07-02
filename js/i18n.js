@@ -103,6 +103,11 @@ const STRINGS = {
     ru: "Ссылка скопирована — поделитесь ею с гостями",
   },
   "profile.chooseLanguage": { en: "Choose language", ca: "Tria l'idioma", es: "Elige el idioma", ru: "Выберите язык" },
+  "profile.roleAdmin": { en: "ADMINISTRATOR", ca: "ADMINISTRADOR/A", es: "ADMINISTRADOR/A", ru: "АДМИНИСТРАТОР" },
+  "profile.roleGuest": { en: "GUEST", ca: "CONVIDAT/DA", es: "INVITADO/A", ru: "ГОСТЬ" },
+  "profile.sectionPreferences": { en: "PREFERENCES", ca: "PREFERÈNCIES", es: "PREFERENCIAS", ru: "НАСТРОЙКИ" },
+  "profile.sectionAdminTools": { en: "ADMIN TOOLS", ca: "EINES D'ADMINISTRACIÓ", es: "HERRAMIENTAS DE ADMIN", ru: "ИНСТРУМЕНТЫ АДМИНА" },
+  "profile.sectionAccount": { en: "ACCOUNT", ca: "COMPTE", es: "CUENTA", ru: "АККАУНТ" },
 
   "viewer.moveTitle": { en: "Move to…", ca: "Mou a…", es: "Mover a…", ru: "Переместить в…" },
   "viewer.confirmDelete": {

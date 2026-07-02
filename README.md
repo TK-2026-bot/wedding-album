@@ -79,6 +79,11 @@ that this no-build vanilla-JS app doesn't bundle, so videos upload as-is.
 3. Home/Albums list real albums from Firestore. Anyone can create an album,
    upload photos/videos (camera or gallery), view them full-screen, select
    multiple to save/move/delete, and manage the guest list from Profile.
+4. The first person ever to sign in for the event is automatically marked
+   admin (role persists after that — it isn't recalculated on later
+   logins); everyone else is a guest. Profile shows the role as a badge, and
+   only admins see the "Invite links" / "Manage members" section. This is a
+   UI-level distinction, not a Firestore security boundary — see below.
 
 ## Security model
 

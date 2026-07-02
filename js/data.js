@@ -155,3 +155,8 @@ export async function listGuests() {
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
+
+export async function getGuest(uid) {
+  const snap = await getDoc(doc(db, "events", EVENT_ID, "guests", uid));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}

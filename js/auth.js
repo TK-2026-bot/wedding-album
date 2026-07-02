@@ -6,7 +6,11 @@ import {
 import {
   doc,
   getDoc,
+  getDocs,
   setDoc,
+  collection,
+  query,
+  limit,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { auth, db } from "./firebase.js";
@@ -32,11 +36,21 @@ export async function signInGuest(name, code) {
   }
 
   const cred = await signInAnonymously(auth);
-  await setDoc(
-    doc(db, "events", EVENT_ID, "guests", cred.user.uid),
-    { name: trimmedName, joinedAt: serverTimestamp() },
-    { merge: true }
-  );
+  const guestRef = doc(db, "events", EVENT_ID, "guests", cred.user.uid);
+  const patch = { name: trimmedName, joinedAt: serverTimestamp() };
+
+  // Role is assigned once, the first time this guest ever signs in, and
+  // never recalculated afterwards — the first person to join the event
+  // (typically whoever set it up) becomes the admin, everyone else a guest.
+  const existingSnap = await getDoc(guestRef);
+  if (!existingSnap.exists()) {
+    const guestsSnap = await getDocs(
+      query(collection(db, "events", EVENT_ID, "guests"), limit(1))
+    );
+    patch.role = guestsSnap.empty ? "admin" : "guest";
+  }
+
+  await setDoc(guestRef, patch, { merge: true });
   localStorage.setItem(NAME_KEY, trimmedName);
   return cred.user;
 }
