@@ -48,6 +48,7 @@ const STRINGS = {
   "album.takePhoto": { en: "Take Photo or Video", ca: "Fes una foto o vídeo", es: "Tomar foto o vídeo", ru: "Снять фото или видео" },
   "album.chooseGallery": { en: "Choose from Gallery", ca: "Tria de la galeria", es: "Elegir de la galería", ru: "Выбрать из галереи" },
   "album.uploading": { en: "Uploading", ca: "Pujant", es: "Subiendo", ru: "Загрузка" },
+  "album.compressing": { en: "Compressing…", ca: "Comprimint…", es: "Comprimiendo…", ru: "Сжатие…" },
   "album.uploadDone": { en: "Done", ca: "Fet", es: "Listo", ru: "Готово" },
   "album.uploadFailed": { en: "Failed", ca: "Ha fallat", es: "Error", ru: "Ошибка" },
 

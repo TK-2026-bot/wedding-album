@@ -207,6 +207,7 @@
     import { requireAuth } from "./js/auth.js";
     import { getAlbum, listPhotos, uploadPhoto } from "./js/data.js";
     import { applyTranslations, t, count } from "./js/i18n.js";
+    import { compressImage } from "./js/media.js";
 
     applyTranslations();
     await requireAuth();
@@ -318,20 +319,24 @@
       uploadPanel.classList.add("is-open");
 
       await Promise.all(
-        files.map((file, i) =>
-          uploadPhoto(albumId, file, (fraction) => {
-            document.getElementById(`upload-fill-${i}`).style.width = `${Math.round(fraction * 100)}%`;
-            document.getElementById(`upload-status-${i}`).textContent = `${Math.round(fraction * 100)}%`;
-          })
-            .then(() => {
-              document.getElementById(`upload-status-${i}`).textContent = t("album.uploadDone");
-              document.getElementById(`upload-status-${i}`).className = "upload-item__status upload-item__status--done";
-            })
-            .catch(() => {
-              document.getElementById(`upload-status-${i}`).textContent = t("album.uploadFailed");
-              document.getElementById(`upload-status-${i}`).className = "upload-item__status upload-item__status--error";
-            })
-        )
+        files.map(async (file, i) => {
+          const statusEl = document.getElementById(`upload-status-${i}`);
+          try {
+            if (file.type.startsWith("image/")) {
+              statusEl.textContent = t("album.compressing");
+              file = await compressImage(file);
+            }
+            await uploadPhoto(albumId, file, (fraction) => {
+              document.getElementById(`upload-fill-${i}`).style.width = `${Math.round(fraction * 100)}%`;
+              statusEl.textContent = `${Math.round(fraction * 100)}%`;
+            });
+            statusEl.textContent = t("album.uploadDone");
+            statusEl.className = "upload-item__status upload-item__status--done";
+          } catch {
+            statusEl.textContent = t("album.uploadFailed");
+            statusEl.className = "upload-item__status upload-item__status--error";
+          }
+        })
       );
 
       await refresh();

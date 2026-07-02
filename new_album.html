@@ -152,6 +152,7 @@
     import { requireAuth } from "./js/auth.js";
     import { createAlbum, uploadPhoto } from "./js/data.js";
     import { applyTranslations, t } from "./js/i18n.js";
+    import { compressImage } from "./js/media.js";
 
     applyTranslations();
     await requireAuth();
@@ -195,7 +196,7 @@
       try {
         const albumId = await createAlbum(name);
         if (coverMode === "choose" && coverFile) {
-          await uploadPhoto(albumId, coverFile);
+          await uploadPhoto(albumId, await compressImage(coverFile));
         }
         window.location.href = `album.html?id=${albumId}`;
       } catch {

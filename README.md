@@ -61,6 +61,15 @@ very unlikely to be exceeded; if it is, overage is billed per-GB
 (~$0.026/GB-month storage, ~$0.12/GB egress) rather than jumping to a fixed
 monthly plan.
 
+## Media handling
+
+Photos are resized (longest side capped at 2000px) and re-encoded to JPEG
+client-side before upload (`js/media.js`), which cuts Storage usage
+dramatically for phone camera photos — see it happen live as a
+"Compressing…" status in the upload panel. Videos are **not** re-encoded:
+doing that in-browser needs a heavy decoder (e.g. ffmpeg.wasm, tens of MB)
+that this no-build vanilla-JS app doesn't bundle, so videos upload as-is.
+
 ## Guest flow
 
 1. Share the login link (from Profile → Invite links, or just the site URL)
