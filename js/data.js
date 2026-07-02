@@ -45,6 +45,7 @@ export async function createAlbum(name) {
   const ref = await addDoc(albumsCol(), {
     name,
     coverUrl: null,
+    pinned: false,
     photoCount: 0,
     videoCount: 0,
     createdAt: serverTimestamp(),
@@ -52,6 +53,32 @@ export async function createAlbum(name) {
     createdByName: getGuestName(),
   });
   return ref.id;
+}
+
+export async function renameAlbum(albumId, name) {
+  await updateDoc(doc(db, "events", EVENT_ID, "albums", albumId), { name });
+}
+
+export async function setAlbumPinned(albumId, pinned) {
+  await updateDoc(doc(db, "events", EVENT_ID, "albums", albumId), { pinned });
+}
+
+export async function setAlbumCover(albumId, coverUrl) {
+  await updateDoc(doc(db, "events", EVENT_ID, "albums", albumId), { coverUrl });
+}
+
+// Deletes an album and everything in it (photo docs + their Storage files).
+export async function deleteAlbum(albumId) {
+  const photos = await listPhotos(albumId);
+  await Promise.all(
+    photos.map((p) =>
+      Promise.all([
+        deleteDoc(doc(db, "events", EVENT_ID, "albums", albumId, "photos", p.id)),
+        deleteObject(ref(storage, p.storagePath)).catch(() => {}),
+      ])
+    )
+  );
+  await deleteDoc(doc(db, "events", EVENT_ID, "albums", albumId));
 }
 
 export async function listPhotos(albumId) {

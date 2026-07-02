@@ -149,13 +149,17 @@
   </div>
 
   <script type="module">
-    import { requireAuth } from "./js/auth.js";
+    import { requireAuth, isAdmin } from "./js/auth.js";
     import { createAlbum, uploadPhoto } from "./js/data.js";
     import { applyTranslations, t } from "./js/i18n.js";
     import { compressImage } from "./js/media.js";
 
     applyTranslations();
     await requireAuth();
+    if (!isAdmin()) {
+      window.location.href = "albums.html";
+      throw new Error("Admin only");
+    }
 
     const autoCard = document.getElementById("cover-auto");
     const chooseCard = document.getElementById("cover-choose");

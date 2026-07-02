@@ -6,21 +6,20 @@ import {
 import {
   doc,
   getDoc,
-  getDocs,
   setDoc,
-  collection,
-  query,
-  limit,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { auth, db } from "./firebase.js";
 import { EVENT_ID } from "./firebase-config.js";
 
 const NAME_KEY = "guestName";
+const ROLE_KEY = "guestRole";
 
-// Simplified guest auth: a shared access code (set by the couple in the
-// events/{EVENT_ID} document) gates entry, then everyone signs in
-// anonymously under their own Firebase uid so photos can be attributed.
+// Three-tier access: the events/{EVENT_ID} document holds one access code
+// per role (adminCode/participantCode/viewerCode). Whichever code the guest
+// enters at login determines their role for that session — re-entering a
+// different code later re-assigns it. Everyone still signs in anonymously
+// under their own Firebase uid so content can be attributed.
 export async function signInGuest(name, code) {
   const trimmedName = name.trim();
   if (!trimmedName) throw new Error("login.errNoName");
@@ -30,33 +29,56 @@ export async function signInGuest(name, code) {
     throw new Error("login.errNoEvent");
   }
   const eventData = eventSnap.data();
-  const expected = String(eventData.accessCode || "").trim().toLowerCase();
-  if (expected && expected !== code.trim().toLowerCase()) {
+  const normalizedCode = code.trim().toLowerCase();
+  const role = matchRole(eventData, normalizedCode);
+  if (!role) {
     throw new Error("login.errBadCode");
   }
 
   const cred = await signInAnonymously(auth);
   const guestRef = doc(db, "events", EVENT_ID, "guests", cred.user.uid);
-  const patch = { name: trimmedName, joinedAt: serverTimestamp() };
-
-  // Role is assigned once, the first time this guest ever signs in, and
-  // never recalculated afterwards — the first person to join the event
-  // (typically whoever set it up) becomes the admin, everyone else a guest.
-  const existingSnap = await getDoc(guestRef);
-  if (!existingSnap.exists()) {
-    const guestsSnap = await getDocs(
-      query(collection(db, "events", EVENT_ID, "guests"), limit(1))
-    );
-    patch.role = guestsSnap.empty ? "admin" : "guest";
-  }
-
-  await setDoc(guestRef, patch, { merge: true });
+  await setDoc(
+    guestRef,
+    { name: trimmedName, role, joinedAt: serverTimestamp() },
+    { merge: true }
+  );
   localStorage.setItem(NAME_KEY, trimmedName);
+  localStorage.setItem(ROLE_KEY, role);
   return cred.user;
+}
+
+function matchRole(eventData, normalizedCode) {
+  const codes = {
+    admin: eventData.adminCode,
+    participant: eventData.participantCode,
+    viewer: eventData.viewerCode,
+  };
+  for (const [role, expected] of Object.entries(codes)) {
+    if (expected && String(expected).trim().toLowerCase() === normalizedCode) {
+      return role;
+    }
+  }
+  return null;
 }
 
 export function getGuestName() {
   return localStorage.getItem(NAME_KEY) || "Guest";
+}
+
+// Cached locally at sign-in for snappy UI gating (hiding upload/delete
+// buttons for viewers). The real permission boundary is enforced server
+// side by firestore.rules/storage.rules, which check the live role on the
+// guest's own document — this cache is only ever used for UI, never trust.
+export function getGuestRole() {
+  return localStorage.getItem(ROLE_KEY) || "viewer";
+}
+
+export function canEdit() {
+  return getGuestRole() !== "viewer";
+}
+
+export function isAdmin() {
+  return getGuestRole() === "admin";
 }
 
 // Resolves with the current user, or redirects to login.html and never
@@ -77,5 +99,6 @@ export function requireAuth() {
 export async function signOutGuest() {
   await signOut(auth);
   localStorage.removeItem(NAME_KEY);
+  localStorage.removeItem(ROLE_KEY);
   window.location.href = "login.html";
 }

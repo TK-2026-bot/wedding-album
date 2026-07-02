@@ -133,7 +133,10 @@
           </a>
         </div>
         <div class="topbar__title" id="album-title">…</div>
-        <div class="topbar__side topbar__side--right">
+        <div class="topbar__side topbar__side--right" style="width:auto;gap:2px;">
+          <button class="iconbtn" type="button" aria-label="Manage album" id="manage-btn" style="display:none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          </button>
           <button class="iconbtn" type="button" aria-label="Select" id="select-btn">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>
           </button>
@@ -149,7 +152,7 @@
           <div class="recently__label" data-i18n="album.recentlyAddedBy">Recently added by</div>
           <div class="recently__avatars" id="recently-avatars"></div>
         </div>
-        <button class="fab" type="button" aria-label="Add photo or video" onclick="openSheet()">
+        <button class="fab" type="button" aria-label="Add photo or video" onclick="openSheet()" id="fab-add" style="display:none;">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         </button>
       </footer>
@@ -192,6 +195,27 @@
       </div>
     </div>
 
+    <!-- Шторка управления альбомом (только admin) -->
+    <div class="sheet-scrim" id="manage-scrim" onclick="if(event.target===this)closeManageSheet()">
+      <div class="sheet" role="dialog" aria-label="Manage album">
+        <div class="sheet__handle"></div>
+        <div class="sheet__title" id="manage-album-title">…</div>
+        <button class="sheet__opt" type="button" id="opt-rename">
+          <span class="sheet__ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+          <span data-i18n="album.rename">Rename</span>
+        </button>
+        <button class="sheet__opt" type="button" id="opt-pin">
+          <span class="sheet__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8m0 0l4 4H8l4-4z"/><path d="M8 14l-3 7 7-3 7 3-3-7"/></svg></span>
+          <span id="pin-label" data-i18n="album.pin">Pin to Home</span>
+        </button>
+        <button class="sheet__opt" type="button" id="opt-delete-album" style="color:var(--danger);">
+          <span class="sheet__ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16"/><path d="M9 7V4.5A1.5 1.5 0 0110.5 3h3A1.5 1.5 0 0115 4.5V7"/><path d="M18.5 7l-.8 12.1a2 2 0 01-2 1.9H8.3a2 2 0 01-2-1.9L5.5 7"/></svg></span>
+          <span data-i18n="album.deleteAlbum">Delete Album</span>
+        </button>
+        <button class="sheet__cancel" type="button" onclick="closeManageSheet()" data-i18n="common.cancel">Cancel</button>
+      </div>
+    </div>
+
     <input type="file" id="file-camera" accept="image/*,video/*" capture="environment" hidden>
     <input type="file" id="file-gallery" accept="image/*,video/*" multiple hidden>
 
@@ -204,8 +228,8 @@
   </div>
 
   <script type="module">
-    import { requireAuth } from "./js/auth.js";
-    import { getAlbum, listPhotos, uploadPhoto } from "./js/data.js";
+    import { requireAuth, canEdit, isAdmin } from "./js/auth.js";
+    import { getAlbum, listPhotos, uploadPhoto, renameAlbum, setAlbumPinned, deleteAlbum } from "./js/data.js";
     import { applyTranslations, t, count } from "./js/i18n.js";
     import { compressImage } from "./js/media.js";
 
@@ -219,12 +243,47 @@
       throw new Error("Missing album id");
     }
 
+    if (canEdit()) document.getElementById("fab-add").style.display = "";
+
     window.openSheet = () => document.getElementById("scrim").classList.add("is-open");
     window.closeSheet = () => document.getElementById("scrim").classList.remove("is-open");
+    window.closeManageSheet = () => document.getElementById("manage-scrim").classList.remove("is-open");
 
     document.getElementById("select-btn").addEventListener("click", () => {
       window.location.href = `multiselect.html?id=${albumId}`;
     });
+
+    // ---- Admin: manage album (rename / pin / delete) ----
+    let currentAlbum = null;
+    if (isAdmin()) {
+      const manageBtn = document.getElementById("manage-btn");
+      manageBtn.style.display = "";
+      manageBtn.addEventListener("click", () => {
+        document.getElementById("manage-album-title").textContent = currentAlbum?.name || "";
+        document.getElementById("pin-label").textContent = t(currentAlbum?.pinned ? "album.unpin" : "album.pin");
+        document.getElementById("manage-scrim").classList.add("is-open");
+      });
+      document.getElementById("opt-rename").addEventListener("click", async () => {
+        const name = prompt(t("album.renamePrompt"), currentAlbum?.name || "");
+        closeManageSheet();
+        if (name && name.trim() && name.trim() !== currentAlbum?.name) {
+          await renameAlbum(albumId, name.trim());
+          await refresh();
+        }
+      });
+      document.getElementById("opt-pin").addEventListener("click", async () => {
+        closeManageSheet();
+        const nextPinned = !currentAlbum?.pinned;
+        await setAlbumPinned(albumId, nextPinned);
+        await refresh();
+      });
+      document.getElementById("opt-delete-album").addEventListener("click", async () => {
+        closeManageSheet();
+        if (!confirm(t("album.confirmDeleteAlbum"))) return;
+        await deleteAlbum(albumId);
+        window.location.href = "albums.html";
+      });
+    }
 
     const grid = document.getElementById("photo-grid");
     const titleEl = document.getElementById("album-title");
@@ -274,6 +333,7 @@
         window.location.href = "albums.html";
         return;
       }
+      currentAlbum = album;
       titleEl.textContent = album.name;
       document.title = `${album.name} — Mallorca Wedding`;
       const photoCount = photos.filter((p) => p.type !== "video").length;

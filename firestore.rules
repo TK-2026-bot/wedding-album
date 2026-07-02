@@ -2,20 +2,50 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /events/{eventId} {
-      // Access code must be publicly readable so the login screen can check
-      // it before the guest is signed in. Only edit event fields by hand
-      // in the Firebase console.
+      // Access codes must be publicly readable so the login screen can
+      // check them before the guest is signed in. Only edit event fields
+      // by hand in the Firebase console.
       allow read: if true;
       allow write: if false;
 
-      // Every signed-in guest is trusted (this is a single private wedding
-      // event, not a multi-tenant app), so any guest may manage any album
-      // or photo, not just their own.
+      function guestPath() {
+        return /databases/$(database)/documents/events/$(eventId)/guests/$(request.auth.uid);
+      }
+      function myRole() {
+        return exists(guestPath()) ? get(guestPath()).data.role : null;
+      }
+      // Role self-assignment on the guest doc is trusted at the client
+      // (matched against the event's access codes before that write
+      // happens) — same "small trusted guest list" model as the rest of
+      // this app, not a hard security boundary.
+      //
+      // Permission tiers:
+      //  - admin: full album management (create/rename/delete/pin/cover)
+      //    + upload + delete any photo + grant access.
+      //  - participant: upload photos/videos + view. No album management,
+      //    no deleting other people's photos.
+      //  - viewer: read-only.
+      function isAdmin() {
+        return request.auth != null && myRole() == 'admin';
+      }
+      function canUpload() {
+        return request.auth != null && myRole() in ['admin', 'participant'];
+      }
+
       match /albums/{albumId} {
-        allow read, create, update, delete: if request.auth != null;
+        allow read: if request.auth != null;
+        allow create, delete: if isAdmin();
+        // Uploading a photo bumps the album's counts/cover as a side
+        // effect (see js/data.js uploadPhoto) — participants may do that,
+        // but only admin may rename/pin/re-cover the album directly.
+        allow update: if isAdmin()
+          || (canUpload() && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['photoCount', 'videoCount', 'coverUrl']));
 
         match /photos/{photoId} {
-          allow read, create, delete: if request.auth != null;
+          allow read: if request.auth != null;
+          allow create: if canUpload();
+          allow delete: if isAdmin();
         }
       }
 

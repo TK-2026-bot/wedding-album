@@ -146,11 +146,11 @@
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12m0 0l-4-4m4 4l4-4"/><path d="M5 18h14"/></svg>
         <span data-i18n="common.save">Save</span>
       </button>
-      <button class="ms-action" id="action-move" disabled>
+      <button class="ms-action" id="action-move" disabled style="display:none;">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h11m0 0l-3-3m3 3l-3 3"/><path d="M20 17H9m0 0l3-3m-3 3l3 3"/></svg>
         <span data-i18n="common.moveTo">Move to&hellip;</span>
       </button>
-      <button class="ms-action ms-action--delete" id="action-delete" disabled>
+      <button class="ms-action ms-action--delete" id="action-delete" disabled style="display:none;">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4.5A1.5 1.5 0 0110.5 3h3A1.5 1.5 0 0115 4.5V7"/><path d="M18.5 7l-.8 12.1a2 2 0 01-2 1.9H8.3a2 2 0 01-2-1.9L5.5 7"/><path d="M10 11v6M14 11v6"/></svg>
         <span data-i18n="common.delete">Delete</span>
       </button>
@@ -167,12 +167,17 @@
   </main>
 
   <script type="module">
-    import { requireAuth } from "./js/auth.js";
+    import { requireAuth, isAdmin } from "./js/auth.js";
     import { getAlbum, listPhotos, deletePhoto, movePhoto, listAlbums } from "./js/data.js";
     import { applyTranslations, t, count } from "./js/i18n.js";
 
     applyTranslations();
     await requireAuth();
+    const admin = isAdmin();
+    if (admin) {
+      document.getElementById("action-move").style.display = "";
+      document.getElementById("action-delete").style.display = "";
+    }
 
     const params = new URLSearchParams(window.location.search);
     const albumId = params.get("id");

@@ -79,6 +79,18 @@
     padding: 5px 12px;
     border-radius: 14px;
   }
+  .pin-toggle {
+    position: absolute; z-index: 3;
+    top: 12px; right: 12px;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.9);
+    background: rgba(0,0,0,0.2);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pin-toggle.is-pinned { background: var(--gold); border-color: var(--gold); }
+  .pin-toggle svg { display: block; }
   .empty-state { text-align: center; color: var(--muted); font-size: 15px; padding: 40px 32px; width: 100%; }
 
   .ph--mauve { background: linear-gradient(180deg, #C7A9B6 0%, #7C5866 55%, #2E1F27 100%); }
@@ -94,7 +106,7 @@
 
       <header class="albums-head">
         <h1 class="albums-head__title" data-i18n="albums.title">Albums</h1>
-        <button class="btn-new" type="button" onclick="window.location.href='new_album.html'" data-i18n="albums.new">+ New</button>
+        <button class="btn-new" type="button" id="btn-new" onclick="window.location.href='new_album.html'" data-i18n="albums.new" style="display:none;">+ New</button>
       </header>
       <hr class="divider">
 
@@ -127,34 +139,59 @@
 </div>
 
   <script type="module">
-    import { requireAuth } from "./js/auth.js";
-    import { listAlbums } from "./js/data.js";
+    import { requireAuth, isAdmin } from "./js/auth.js";
+    import { listAlbums, setAlbumPinned } from "./js/data.js";
     import { applyTranslations, t, count } from "./js/i18n.js";
 
     applyTranslations();
     await requireAuth();
 
+    const admin = isAdmin();
+    if (admin) document.getElementById("btn-new").style.display = "";
+
     const PLACEHOLDER_CLASSES = ["ph", "ph--blue", "ph--teal", "ph--mauve", "ph--green"];
+    const PIN_ICON = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8m0 0l4 4H8l4-4z"/><path d="M8 14l-3 7 7-3 7 3-3-7"/></svg>';
 
     const grid = document.getElementById("albums-grid");
-    const albums = await listAlbums();
+    let albums = await listAlbums();
 
-    if (!albums.length) {
-      grid.innerHTML = `<p class="empty-state">${t("albums.empty")}</p>`;
-    } else {
+    function render() {
+      if (!albums.length) {
+        grid.innerHTML = `<p class="empty-state">${t("albums.empty")}</p>`;
+        return;
+      }
       grid.innerHTML = albums
         .map((a, i) => {
           const cls = PLACEHOLDER_CLASSES[i % PLACEHOLDER_CLASSES.length];
           const cover = a.coverUrl ? `<img src="${a.coverUrl}" alt="">` : "";
           const total = (a.photoCount || 0) + (a.videoCount || 0);
+          const pin = admin
+            ? `<button type="button" class="pin-toggle ${a.pinned ? "is-pinned" : ""}" data-id="${a.id}" aria-label="Pin">${PIN_ICON}</button>`
+            : "";
           return `<a class="album-card ${a.coverUrl ? "" : cls}" href="album.html?id=${a.id}">
             ${cover}
+            ${pin}
             <span class="badge-count">${count(total, "item")}</span>
             <span class="album-card__title">${a.name}</span>
           </a>`;
         })
         .join("");
+
+      if (admin) {
+        grid.querySelectorAll(".pin-toggle").forEach((btn) => {
+          btn.addEventListener("click", async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const album = albums.find((a) => a.id === btn.dataset.id);
+            album.pinned = !album.pinned;
+            render();
+            await setAlbumPinned(album.id, album.pinned);
+          });
+        });
+      }
     }
+
+    render();
   </script>
 </body>
 </html>

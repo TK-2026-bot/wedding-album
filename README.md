@@ -9,17 +9,34 @@ into shared albums. Static HTML/CSS/JS (no build step) backed by Firebase
 - Plain HTML pages, one per screen (`index.html`, `albums.html`, `album.html`, …).
 - `js/firebase.js` initializes the Firebase SDK (loaded from the `gstatic.com`
   CDN as ES modules — no bundler needed).
-- `js/auth.js` — simplified guest sign-in: a shared access code gates entry,
-  then every guest is signed in anonymously via Firebase Auth so uploads can
-  be attributed to a name.
+- `js/auth.js` — simplified guest sign-in: one of three shared access codes
+  gates entry and assigns a role, then every guest is signed in anonymously
+  via Firebase Auth so uploads can be attributed to a name.
 - `js/data.js` — Firestore/Storage helpers (albums, photos, guests).
 - Data model, all under a single event document (see `EVENT_ID` in
   `js/firebase-config.js`):
-  - `events/{eventId}` — event info + `accessCode` (publicly readable so the
-    login screen can check it before sign-in).
-  - `events/{eventId}/albums/{albumId}` — album name, cover, photo/video counts.
+  - `events/{eventId}` — event info + `adminCode` / `participantCode` /
+    `viewerCode` (publicly readable so the login screen can check them
+    before sign-in).
+  - `events/{eventId}/albums/{albumId}` — album name, cover, `pinned`,
+    photo/video counts.
   - `events/{eventId}/albums/{albumId}/photos/{photoId}` — one per uploaded file.
-  - `events/{eventId}/guests/{uid}` — one per guest who signed in.
+  - `events/{eventId}/guests/{uid}` — one per guest who signed in, with
+    `role: "admin" | "participant" | "viewer"`.
+
+### Roles
+
+Whichever code a guest enters at login determines their role for that
+session (entering a different code later re-assigns it):
+
+| Role | Can do |
+|---|---|
+| **admin** | Everything: create/rename/delete/pin albums, set covers, upload, delete any photo, grant access (share codes). |
+| **participant** | Upload photos/videos, view. Can't manage albums or delete other people's photos. |
+| **viewer** | Read-only: view and save/download, nothing else. |
+
+Enforced in both `firestore.rules` and `storage.rules` (not just hidden in
+the UI) — see the `canEdit()`/`isAdmin()` helpers in those files.
 
 ## One-time setup
 
@@ -38,7 +55,12 @@ into shared albums. Static HTML/CSS/JS (no build step) backed by Firebase
    at `events/mallorca-wedding` (or whatever `EVENT_ID` you set in
    `js/firebase-config.js`) with fields:
    - `name` (string) — e.g. `"Pau & Sofia"`
-   - `accessCode` (string) — the code you'll print on invitations, e.g. `"PAUSOFIA26"`
+   - `adminCode` (string) — e.g. `"PAUSOFIA-ADMIN"` — give this to the couple
+     and yourself only.
+   - `participantCode` (string) — e.g. `"PAUSOFIA26"` — the one you print on
+     invitations for guests who'll upload photos.
+   - `viewerCode` (string) — e.g. `"PAUSOFIA-VIEW"` — for people who should
+     only browse (e.g. family who couldn't attend).
 8. **Deploy Firestore/Storage rules and hosting** (requires the
    [Firebase CLI](https://firebase.google.com/docs/cli)):
    ```
@@ -73,21 +95,24 @@ that this no-build vanilla-JS app doesn't bundle, so videos upload as-is.
 ## Guest flow
 
 1. Share the login link (from Profile → Invite links, or just the site URL)
-   plus the access code from step 7 above.
+   plus the appropriate code from step 7 above for who you're inviting.
 2. Guest enters their name + the code once; from then on the browser stays
-   signed in.
-3. Home/Albums list real albums from Firestore. Anyone can create an album,
-   upload photos/videos (camera or gallery), view them full-screen, select
-   multiple to save/move/delete, and manage the guest list from Profile.
-4. The first person ever to sign in for the event is automatically marked
-   admin (role persists after that — it isn't recalculated on later
-   logins); everyone else is a guest. Profile shows the role as a badge, and
-   only admins see the "Invite links" / "Manage members" section. This is a
-   UI-level distinction, not a Firestore security boundary — see below.
+   signed in with the role that code grants.
+3. Home shows pinned albums; Albums lists everything. Admins create/rename/
+   pin/delete albums and set covers (from a photo's "Set Cover" action);
+   admins and participants upload photos/videos (camera or gallery) and
+   view full-screen; viewers can only view and save/download. Profile shows
+   the guest's role as a badge, and only admins see "Invite links"/"Manage
+   members".
 
 ## Security model
 
-This is intentionally a low-friction, single-event app: once someone is
-signed in (has the access code), they can manage any album/photo, not just
-their own — appropriate for a small trusted guest list, not a multi-tenant
-product. See `firestore.rules` / `storage.rules` for the exact rules.
+Within a role tier, guests are trusted with each other's content (e.g. any
+participant can add photos to any album, not just their own) — appropriate
+for a small guest list, not a multi-tenant product. The role boundaries
+themselves (admin vs participant vs viewer) *are* enforced server-side in
+`firestore.rules` / `storage.rules`, not just hidden in the UI. The one
+soft spot: a guest's own `role` field is written by the (trusted) client
+after it validates the entered code, so a guest who opens devtools could
+technically self-assign a higher role — same trust model as the rest of
+this app, see the comment on `canEdit()` in `firestore.rules`.

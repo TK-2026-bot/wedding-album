@@ -90,10 +90,11 @@
 
     const PLACEHOLDER_CLASSES = ["ph", "ph--blue", "ph--teal", "ph--mauve"];
     const grid = document.getElementById("home-cards");
-    const albums = (await listAlbums()).slice(0, 4);
+    const allAlbums = await listAlbums();
+    const albums = allAlbums.filter((a) => a.pinned).slice(0, 4);
 
     if (!albums.length) {
-      grid.innerHTML = `<p class="empty-state">${t("index.empty")}</p>`;
+      grid.innerHTML = `<p class="empty-state">${t(allAlbums.length ? "index.emptyPinned" : "index.empty")}</p>`;
     } else {
       grid.innerHTML = albums
         .map((a, i) => {

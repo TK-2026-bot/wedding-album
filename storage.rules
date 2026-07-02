@@ -2,11 +2,26 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     match /events/{eventId}/albums/{albumId}/{fileName} {
+      function guestPath() {
+        return /databases/(default)/documents/events/$(eventId)/guests/$(request.auth.uid);
+      }
+      function myRole() {
+        return firestore.exists(guestPath()) ? firestore.get(guestPath()).data.role : null;
+      }
+      // Mirrors firestore.rules: admin + participant can upload, only
+      // admin can delete, viewer is read-only.
+      function canUpload() {
+        return request.auth != null && myRole() in ['admin', 'participant'];
+      }
+      function isAdmin() {
+        return request.auth != null && myRole() == 'admin';
+      }
+
       allow read: if request.auth != null;
-      allow write: if request.auth != null
+      allow write: if canUpload()
         && request.resource.size < 200 * 1024 * 1024
         && request.resource.contentType.matches('image/.*|video/.*');
-      allow delete: if request.auth != null;
+      allow delete: if isAdmin();
     }
   }
 }
