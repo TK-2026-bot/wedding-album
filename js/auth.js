@@ -19,16 +19,16 @@ const NAME_KEY = "guestName";
 // anonymously under their own Firebase uid so photos can be attributed.
 export async function signInGuest(name, code) {
   const trimmedName = name.trim();
-  if (!trimmedName) throw new Error("Введите имя");
+  if (!trimmedName) throw new Error("login.errNoName");
 
   const eventSnap = await getDoc(doc(db, "events", EVENT_ID));
   if (!eventSnap.exists()) {
-    throw new Error("Событие не найдено. Проверьте настройки Firebase.");
+    throw new Error("login.errNoEvent");
   }
   const eventData = eventSnap.data();
   const expected = String(eventData.accessCode || "").trim().toLowerCase();
   if (expected && expected !== code.trim().toLowerCase()) {
-    throw new Error("Неверный код доступа");
+    throw new Error("login.errBadCode");
   }
 
   const cred = await signInAnonymously(auth);

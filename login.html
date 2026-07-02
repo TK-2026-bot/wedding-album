@@ -81,6 +81,30 @@
     margin-top: 12px;
     min-height: 18px;
   }
+  .lang-switch {
+    position: absolute;
+    top: calc(12px + env(safe-area-inset-top));
+    right: 16px;
+    z-index: 5;
+    display: flex;
+    gap: 6px;
+  }
+  .lang-switch button {
+    border: 1px solid rgba(255,255,255,0.55);
+    background: rgba(0,0,0,0.25);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 9px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: var(--font-ui);
+  }
+  .lang-switch button.is-active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--ink);
+  }
 </style>
 </head>
 <body>
@@ -88,24 +112,25 @@
   <div class="phone-ratio-box">
   <main class="app">
     <div class="notch"></div>
+    <div class="lang-switch" id="lang-switch"></div>
     <div class="screen">
       <div class="login-hero">
         <img src="assets/img/login-hero.png" alt="Mallorca Wedding — Pau &amp; Sofia, 10.07.2026, Mallorca, Spain">
       </div>
       <form class="login-body" id="login-form">
         <h1 class="login-title">Mallorca Wedding</h1>
-        <p class="login-sub">Enter your name and the access code from your invitation</p>
+        <p class="login-sub" data-i18n="login.subtitle">Enter your name and the access code from your invitation</p>
 
         <div class="login-field">
-          <label for="name">Your name</label>
+          <label for="name" data-i18n="login.nameLabel">Your name</label>
           <input id="name" name="name" type="text" autocomplete="name" placeholder="Sofia" required>
         </div>
         <div class="login-field">
-          <label for="code">Access code</label>
+          <label for="code" data-i18n="login.codeLabel">Access code</label>
           <input id="code" name="code" type="text" autocomplete="off" placeholder="e.g. PAUSOFIA26" required>
         </div>
 
-        <button class="login-submit" type="submit" id="login-submit">Continue</button>
+        <button class="login-submit" type="submit" id="login-submit" data-i18n="login.continue">Continue</button>
         <p class="login-error" id="login-error"></p>
       </form>
     </div>
@@ -115,6 +140,24 @@
 
   <script type="module">
     import { signInGuest } from "./js/auth.js";
+    import { applyTranslations, t, getLang, setLang, LANGUAGES } from "./js/i18n.js";
+
+    applyTranslations();
+
+    const langSwitch = document.getElementById("lang-switch");
+    function renderLangSwitch() {
+      const current = getLang();
+      langSwitch.innerHTML = LANGUAGES.map(
+        (l) => `<button type="button" class="${l.code === current ? "is-active" : ""}" data-code="${l.code}">${l.code.toUpperCase()}</button>`
+      ).join("");
+      langSwitch.querySelectorAll("button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          setLang(btn.dataset.code);
+          renderLangSwitch();
+        });
+      });
+    }
+    renderLangSwitch();
 
     const form = document.getElementById("login-form");
     const submitBtn = document.getElementById("login-submit");
@@ -124,16 +167,16 @@
       e.preventDefault();
       errorEl.textContent = "";
       submitBtn.disabled = true;
-      submitBtn.textContent = "Signing in…";
+      submitBtn.textContent = t("login.signingIn");
       try {
         const name = form.name.value;
         const code = form.code.value;
         await signInGuest(name, code);
         window.location.href = "index.html";
       } catch (err) {
-        errorEl.textContent = err.message || "Something went wrong. Try again.";
+        errorEl.textContent = t(err.message) || t("login.errGeneric");
         submitBtn.disabled = false;
-        submitBtn.textContent = "Continue";
+        submitBtn.textContent = t("login.continue");
       }
     });
   </script>

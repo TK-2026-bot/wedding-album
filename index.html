@@ -52,7 +52,7 @@
 
       <!-- Закреплённые карточки-альбома -->
       <section class="home-cards" id="home-cards">
-        <p class="empty-state">Loading…</p>
+        <p class="empty-state" data-i18n="common.loading">Loading…</p>
       </section>
 
     </div>
@@ -61,19 +61,19 @@
     <nav class="tabbar">
       <a class="tab is-active" href="index.html" aria-current="page">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9h12v-9"/></svg>
-        <span>Home</span>
+        <span data-i18n="nav.home">Home</span>
       </a>
       <a class="tab" href="albums.html">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="6.5" height="6.5" rx="1.4"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.4"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.4"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.4"/></svg>
-        <span>Albums</span>
+        <span data-i18n="nav.albums">Albums</span>
       </a>
       <a class="tab" href="#">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg>
-        <span>Search</span>
+        <span data-i18n="nav.search">Search</span>
       </a>
       <a class="tab" href="profile.html">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>
-        <span>Profile</span>
+        <span data-i18n="nav.profile">Profile</span>
       </a>
     </nav>
   </main>
@@ -83,7 +83,9 @@
   <script type="module">
     import { requireAuth } from "./js/auth.js";
     import { listAlbums } from "./js/data.js";
+    import { applyTranslations, t } from "./js/i18n.js";
 
+    applyTranslations();
     await requireAuth();
 
     const PLACEHOLDER_CLASSES = ["ph", "ph--blue", "ph--teal", "ph--mauve"];
@@ -91,7 +93,7 @@
     const albums = (await listAlbums()).slice(0, 4);
 
     if (!albums.length) {
-      grid.innerHTML = '<p class="empty-state">No albums yet — go to Albums to create the first one.</p>';
+      grid.innerHTML = `<p class="empty-state">${t("index.empty")}</p>`;
     } else {
       grid.innerHTML = albums
         .map((a, i) => {

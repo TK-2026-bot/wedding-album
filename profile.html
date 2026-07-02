@@ -6,25 +6,51 @@
 <title>Profile — Mallorca Wedding</title>
 <link rel="stylesheet" href="css/design-system.css">
 <style>
+  .profile-hero {
+    position: relative;
+    flex: 0 0 auto;
+    height: 260px;
+    overflow: hidden;
+  }
+  .profile-hero img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .profile-hero::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.05) 40%, var(--bg) 96%);
+  }
+  .profile-hero .topbar,
+  .profile-hero .topbar__title {
+    position: relative;
+    z-index: 2;
+    color: #fff;
+  }
   .profile-header {
+    position: relative;
+    z-index: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 28px 20px 8px;
+    padding-top: 6px;
   }
   .profile-avatar {
-    width: 84px; height: 84px;
+    width: 76px; height: 76px;
     border-radius: 50%;
     background: var(--gold);
     color: var(--ink);
     display: flex; align-items: center; justify-content: center;
     font-family: var(--font-title);
-    font-size: 32px;
-    margin-bottom: 14px;
+    font-size: 30px;
+    margin-bottom: 12px;
+    border: 3px solid rgba(255,255,255,0.85);
   }
-  .profile-name { font-family: var(--font-title); font-size: 22px; }
+  .profile-name { font-family: var(--font-title); font-size: 22px; color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,0.35); }
 
-  .settings-list { padding: 20px 28px; }
+  .settings-list { padding: 12px 28px 20px; }
   .settings-row {
     display: flex; align-items: center; justify-content: space-between;
     width: 100%;
@@ -70,6 +96,29 @@
     white-space: nowrap;
   }
   .toast.is-visible { opacity: 1; }
+
+  .lang-overlay {
+    position: absolute; inset: 0; z-index: 25;
+    background: rgba(0,0,0,0.5);
+    display: none; align-items: flex-end;
+  }
+  .lang-overlay.is-open { display: flex; }
+  .lang-sheet {
+    width: 100%; background: var(--bg);
+    border-radius: 20px 20px 0 0;
+    padding: 12px 24px calc(24px + env(safe-area-inset-bottom));
+  }
+  .lang-sheet__handle { width: 40px; height: 4px; background: #DEDAD2; border-radius: 3px; margin: 0 auto 18px; }
+  .lang-sheet h2 { font-family: var(--font-title); font-size: 22px; text-align: center; margin-bottom: 16px; }
+  .lang-option {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; background: none; border: none;
+    padding: 15px 6px; font-size: 17px; color: var(--ink);
+    font-family: var(--font-ui); cursor: pointer; text-align: left;
+  }
+  .lang-option + .lang-option { border-top: 1px solid var(--divider-2); }
+  .lang-option__check { color: var(--gold-text); font-weight: 700; visibility: hidden; }
+  .lang-option.is-selected .lang-option__check { visibility: visible; }
 </style>
 </head>
 <body>
@@ -78,32 +127,33 @@
   <main class="app">
     <div class="notch"></div>
     <div class="screen">
-      <div class="topbar">
-        <div class="topbar__side"></div>
-        <div class="topbar__title">Profile</div>
-        <div class="topbar__side topbar__side--right"></div>
-      </div>
-      <hr class="divider">
-
-      <div class="profile-header">
-        <div class="profile-avatar" id="profile-avatar">?</div>
-        <div class="profile-name" id="profile-name">…</div>
+      <div class="profile-hero">
+        <img src="assets/img/profile-hero.png" alt="">
+        <div class="topbar">
+          <div class="topbar__side"></div>
+          <div class="topbar__title" data-i18n="profile.title">Profile</div>
+          <div class="topbar__side topbar__side--right"></div>
+        </div>
+        <div class="profile-header">
+          <div class="profile-avatar" id="profile-avatar">?</div>
+          <div class="profile-name" id="profile-name">…</div>
+        </div>
       </div>
 
       <div class="settings-list">
-        <div class="settings-row">
-          <span>Language</span>
-          <span class="settings-row__value">English</span>
-        </div>
+        <button class="settings-row" type="button" id="row-language">
+          <span data-i18n="profile.language">Language</span>
+          <span class="settings-row__value" id="language-value">English</span>
+        </button>
         <button class="settings-row" type="button" id="row-invite">
-          <span>Invite links</span>
-          <span class="settings-row__value">Copy</span>
+          <span data-i18n="profile.invite">Invite links</span>
+          <span class="settings-row__value" data-i18n="profile.copy">Copy</span>
         </button>
         <button class="settings-row" type="button" id="row-members">
-          <span>Manage members</span>
+          <span data-i18n="profile.members">Manage members</span>
           <span class="settings-row__value" id="members-count">…</span>
         </button>
-        <button class="settings-row settings-row--danger" type="button" id="row-logout">
+        <button class="settings-row settings-row--danger" type="button" id="row-logout" data-i18n="profile.logout">
           Log out
         </button>
       </div>
@@ -114,23 +164,31 @@
     <nav class="tabbar">
       <a class="tab" href="index.html">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9h12v-9"/></svg>
-        <span>Home</span>
+        <span data-i18n="nav.home">Home</span>
       </a>
       <a class="tab" href="albums.html">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="6.5" height="6.5" rx="1.4"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.4"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.4"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.4"/></svg>
-        <span>Albums</span>
+        <span data-i18n="nav.albums">Albums</span>
       </a>
       <a class="tab" href="#">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg>
-        <span>Search</span>
+        <span data-i18n="nav.search">Search</span>
       </a>
       <a class="tab is-active" href="profile.html" aria-current="page">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>
-        <span>Profile</span>
+        <span data-i18n="nav.profile">Profile</span>
       </a>
     </nav>
 
     <div class="toast" id="toast"></div>
+
+    <div class="lang-overlay" id="lang-overlay">
+      <div class="lang-sheet">
+        <div class="lang-sheet__handle"></div>
+        <h2 data-i18n="profile.chooseLanguage">Choose language</h2>
+        <div id="lang-options"></div>
+      </div>
+    </div>
   </main>
   </div>
   </div>
@@ -138,7 +196,9 @@
   <script type="module">
     import { requireAuth, getGuestName, signOutGuest } from "./js/auth.js";
     import { listGuests } from "./js/data.js";
+    import { applyTranslations, t, getLang, setLang, LANGUAGES } from "./js/i18n.js";
 
+    applyTranslations();
     await requireAuth();
 
     const name = getGuestName();
@@ -156,7 +216,7 @@
       const link = `${window.location.origin}${window.location.pathname.replace(/profile\.html$/, "login.html")}`;
       try {
         await navigator.clipboard.writeText(link);
-        showToast("Link copied — share it with your guests");
+        showToast(t("profile.linkCopied"));
       } catch {
         showToast(link);
       }
@@ -187,6 +247,42 @@
 
     document.getElementById("row-members").addEventListener("click", () => {
       membersList.classList.toggle("is-open");
+    });
+
+    // ---- Language picker ----
+    const languageValue = document.getElementById("language-value");
+    const langOverlay = document.getElementById("lang-overlay");
+    const langOptions = document.getElementById("lang-options");
+
+    function renderLanguageValue() {
+      languageValue.textContent = LANGUAGES.find((l) => l.code === getLang())?.label || "English";
+    }
+    renderLanguageValue();
+
+    function renderLangOptions() {
+      const current = getLang();
+      langOptions.innerHTML = LANGUAGES.map(
+        (l) => `<button type="button" class="lang-option ${l.code === current ? "is-selected" : ""}" data-code="${l.code}">
+          <span>${l.label}</span>
+          <span class="lang-option__check">✓</span>
+        </button>`
+      ).join("");
+      langOptions.querySelectorAll(".lang-option").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          setLang(btn.dataset.code);
+          renderLanguageValue();
+          renderLangOptions();
+          langOverlay.classList.remove("is-open");
+        });
+      });
+    }
+
+    document.getElementById("row-language").addEventListener("click", () => {
+      renderLangOptions();
+      langOverlay.classList.add("is-open");
+    });
+    langOverlay.addEventListener("click", (e) => {
+      if (e.target === langOverlay) langOverlay.classList.remove("is-open");
     });
   </script>
 </body>

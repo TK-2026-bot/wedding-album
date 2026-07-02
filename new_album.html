@@ -116,31 +116,31 @@
 
         <div class="sheet">
           <div class="handle"></div>
-          <h1>New Album</h1>
+          <h1 data-i18n="newAlbum.title">New Album</h1>
 
-          <div class="field-label">Album Name</div>
-          <input class="name-input" id="album-name" type="text" placeholder="e.g. Beach Party">
+          <div class="field-label" data-i18n="newAlbum.nameLabel">Album Name</div>
+          <input class="name-input" id="album-name" type="text" placeholder="e.g. Beach Party" data-i18n-placeholder="newAlbum.namePlaceholder">
 
-          <div class="field-label">Cover Photo</div>
+          <div class="field-label" data-i18n="newAlbum.coverLabel">Cover Photo</div>
           <div class="cover-row">
             <button type="button" class="cover-card cover-card--selected" id="cover-auto" data-mode="auto">
               <div class="edit-badge">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
               </div>
               <div class="cover-icon cover-icon--auto"></div>
-              <div class="cover-title">Auto</div>
-              <div class="cover-sub">First photo added</div>
+              <div class="cover-title" data-i18n="newAlbum.auto">Auto</div>
+              <div class="cover-sub" data-i18n="newAlbum.autoSub">First photo added</div>
             </button>
             <button type="button" class="cover-card" id="cover-choose" data-mode="choose">
               <div class="cover-icon cover-icon--choose"></div>
-              <div class="cover-title" id="cover-choose-title">Choose</div>
-              <div class="cover-sub" id="cover-choose-sub">Pick a photo now</div>
+              <div class="cover-title" id="cover-choose-title" data-i18n="newAlbum.choose">Choose</div>
+              <div class="cover-sub" id="cover-choose-sub" data-i18n="newAlbum.chooseSub">Pick a photo now</div>
             </button>
             <input type="file" id="cover-file" accept="image/*" hidden>
           </div>
 
-          <button class="create-btn" type="button" id="create-btn">Create Album</button>
-          <button class="cancel-btn" type="button" onclick="window.location.href='albums.html'">Cancel</button>
+          <button class="create-btn" type="button" id="create-btn" data-i18n="newAlbum.create">Create Album</button>
+          <button class="cancel-btn" type="button" onclick="window.location.href='albums.html'" data-i18n="common.cancel">Cancel</button>
           <p class="login-error" id="new-album-error" style="color:#C24B3F;font-size:14px;text-align:center;"></p>
         </div>
 
@@ -151,7 +151,9 @@
   <script type="module">
     import { requireAuth } from "./js/auth.js";
     import { createAlbum, uploadPhoto } from "./js/data.js";
+    import { applyTranslations, t } from "./js/i18n.js";
 
+    applyTranslations();
     await requireAuth();
 
     const autoCard = document.getElementById("cover-auto");
@@ -174,7 +176,7 @@
     });
     fileInput.addEventListener("change", () => {
       coverFile = fileInput.files[0] || null;
-      chooseSub.textContent = coverFile ? coverFile.name : "Pick a photo now";
+      chooseSub.textContent = coverFile ? coverFile.name : t("newAlbum.chooseSub");
     });
 
     const nameInput = document.getElementById("album-name");
@@ -184,22 +186,22 @@
     createBtn.addEventListener("click", async () => {
       const name = nameInput.value.trim();
       if (!name) {
-        errorEl.textContent = "Give the album a name";
+        errorEl.textContent = t("newAlbum.errNoName");
         return;
       }
       errorEl.textContent = "";
       createBtn.disabled = true;
-      createBtn.textContent = "Creating…";
+      createBtn.textContent = t("newAlbum.creating");
       try {
         const albumId = await createAlbum(name);
         if (coverMode === "choose" && coverFile) {
           await uploadPhoto(albumId, coverFile);
         }
         window.location.href = `album.html?id=${albumId}`;
-      } catch (err) {
-        errorEl.textContent = err.message || "Could not create the album";
+      } catch {
+        errorEl.textContent = t("newAlbum.errCreate");
         createBtn.disabled = false;
-        createBtn.textContent = "Create Album";
+        createBtn.textContent = t("newAlbum.create");
       }
     });
   </script>

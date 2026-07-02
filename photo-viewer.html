@@ -182,10 +182,10 @@
 
       <div class="move-overlay" id="move-overlay">
         <div class="move-sheet">
-          <h2>Move to…</h2>
+          <h2 data-i18n="viewer.moveTitle">Move to…</h2>
           <select id="move-select"></select>
-          <button class="move-confirm" id="move-confirm" type="button">Move</button>
-          <button class="move-cancel" id="move-cancel" type="button">Cancel</button>
+          <button class="move-confirm" id="move-confirm" type="button" data-i18n="common.move">Move</button>
+          <button class="move-cancel" id="move-cancel" type="button" data-i18n="common.cancel">Cancel</button>
         </div>
       </div>
     </div>
@@ -193,19 +193,19 @@
     <footer class="viewer-actionbar">
       <button class="viewer-action" id="action-save">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12m0 0l-4-4m4 4l4-4"/><path d="M5 18h14"/></svg>
-        Save
+        <span data-i18n="common.save">Save</span>
       </button>
       <button class="viewer-action" id="action-share">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4m0 0l-3.5 3.5M12 4l3.5 3.5"/><path d="M5 12v6.5a1.5 1.5 0 001.5 1.5h11a1.5 1.5 0 001.5-1.5V12"/></svg>
-        Share
+        <span data-i18n="common.share">Share</span>
       </button>
       <button class="viewer-action" id="action-move">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h11m0 0l-3-3m3 3l-3 3"/><path d="M20 17H9m0 0l3-3m-3 3l3 3"/></svg>
-        Move
+        <span data-i18n="common.move">Move</span>
       </button>
       <button class="viewer-action viewer-action--delete" id="action-delete">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4.5A1.5 1.5 0 0110.5 3h3A1.5 1.5 0 0115 4.5V7"/><path d="M18.5 7l-.8 12.1a2 2 0 01-2 1.9H8.3a2 2 0 01-2-1.9L5.5 7"/><path d="M10 11v6M14 11v6"/></svg>
-        Delete
+        <span data-i18n="common.delete">Delete</span>
       </button>
     </footer>
 
@@ -214,7 +214,9 @@
   <script type="module">
     import { requireAuth } from "./js/auth.js";
     import { listPhotos, deletePhoto, movePhoto, listAlbums } from "./js/data.js";
+    import { applyTranslations, t, getLang } from "./js/i18n.js";
 
+    applyTranslations();
     await requireAuth();
 
     const params = new URLSearchParams(window.location.search);
@@ -241,9 +243,10 @@
     const prevBtn = document.getElementById("nav-prev");
     const nextBtn = document.getElementById("nav-next");
 
+    const LOCALES = { en: "en-US", ca: "ca-ES", es: "es-ES", ru: "ru-RU" };
     function formatDate(ts) {
       if (!ts?.toDate) return "";
-      return ts.toDate().toLocaleDateString(undefined, { month: "short", day: "numeric" });
+      return ts.toDate().toLocaleDateString(LOCALES[getLang()], { month: "short", day: "numeric" });
     }
 
     function render() {
@@ -298,13 +301,13 @@
         }
       } else {
         await navigator.clipboard.writeText(photo.url);
-        alert("Link copied to clipboard");
+        alert(t("viewer.linkCopied"));
       }
     });
 
     document.getElementById("action-delete").addEventListener("click", async () => {
       const photo = photos[index];
-      if (!confirm("Delete this item? This cannot be undone.")) return;
+      if (!confirm(t("viewer.confirmDelete"))) return;
       await deletePhoto(albumId, photo);
       photos.splice(index, 1);
       if (!photos.length) {
@@ -322,7 +325,7 @@
     document.getElementById("action-move").addEventListener("click", async () => {
       const albums = (await listAlbums()).filter((a) => a.id !== albumId);
       if (!albums.length) {
-        alert("No other albums to move to yet");
+        alert(t("viewer.noOtherAlbums"));
         return;
       }
       moveSelect.innerHTML = albums.map((a) => `<option value="${a.id}">${a.name}</option>`).join("");

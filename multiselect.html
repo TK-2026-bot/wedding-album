@@ -128,14 +128,14 @@
         <div class="topbar__side"></div>
         <div class="topbar__title" id="title">Select</div>
         <div class="topbar__side topbar__side--right">
-          <button class="btn-text" id="cancel-btn">Cancel</button>
+          <button class="btn-text" id="cancel-btn" data-i18n="common.cancel">Cancel</button>
         </div>
       </div>
       <hr class="divider">
 
       <div class="select-row">
         <span class="select-row__count" id="count-label">0 selected</span>
-        <button class="select-row__all" id="select-all-btn">Select all</button>
+        <button class="select-row__all" id="select-all-btn" data-i18n="multiselect.selectAll">Select all</button>
       </div>
 
       <section class="photo-grid" id="photo-grid"></section>
@@ -144,24 +144,24 @@
     <footer class="ms-actionbar">
       <button class="ms-action" id="action-save" disabled>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12m0 0l-4-4m4 4l4-4"/><path d="M5 18h14"/></svg>
-        Save
+        <span data-i18n="common.save">Save</span>
       </button>
       <button class="ms-action" id="action-move" disabled>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h11m0 0l-3-3m3 3l-3 3"/><path d="M20 17H9m0 0l3-3m-3 3l3 3"/></svg>
-        Move to&hellip;
+        <span data-i18n="common.moveTo">Move to&hellip;</span>
       </button>
       <button class="ms-action ms-action--delete" id="action-delete" disabled>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4.5A1.5 1.5 0 0110.5 3h3A1.5 1.5 0 0115 4.5V7"/><path d="M18.5 7l-.8 12.1a2 2 0 01-2 1.9H8.3a2 2 0 01-2-1.9L5.5 7"/><path d="M10 11v6M14 11v6"/></svg>
-        Delete
+        <span data-i18n="common.delete">Delete</span>
       </button>
     </footer>
 
     <div class="move-overlay" id="move-overlay">
       <div class="move-sheet">
-        <h2>Move to…</h2>
+        <h2 data-i18n="viewer.moveTitle">Move to…</h2>
         <select id="move-select"></select>
-        <button class="move-confirm" id="move-confirm" type="button">Move</button>
-        <button class="move-cancel" id="move-cancel" type="button">Cancel</button>
+        <button class="move-confirm" id="move-confirm" type="button" data-i18n="common.move">Move</button>
+        <button class="move-cancel" id="move-cancel" type="button" data-i18n="common.cancel">Cancel</button>
       </div>
     </div>
   </main>
@@ -169,7 +169,9 @@
   <script type="module">
     import { requireAuth } from "./js/auth.js";
     import { getAlbum, listPhotos, deletePhoto, movePhoto, listAlbums } from "./js/data.js";
+    import { applyTranslations, t, count } from "./js/i18n.js";
 
+    applyTranslations();
     await requireAuth();
 
     const params = new URLSearchParams(window.location.search);
@@ -191,14 +193,14 @@
     const deleteBtn = document.getElementById("action-delete");
 
     const album = await getAlbum(albumId);
-    document.getElementById("title").textContent = album ? album.name : "Select";
+    document.getElementById("title").textContent = album ? album.name : t("multiselect.title");
 
     let photos = await listPhotos(albumId);
     const selected = new Set();
 
     function renderGrid() {
       if (!photos.length) {
-        grid.innerHTML = '<p class="empty-state">No photos in this album yet.</p>';
+        grid.innerHTML = `<p class="empty-state">${t("multiselect.empty")}</p>`;
         return;
       }
       grid.innerHTML = photos
@@ -224,7 +226,7 @@
     }
 
     function updateUI() {
-      countLabel.textContent = `${selected.size} selected`;
+      countLabel.textContent = count(selected.size, "selected");
       const hasSelection = selected.size > 0;
       saveBtn.disabled = !hasSelection;
       moveBtn.disabled = !hasSelection;
@@ -257,7 +259,8 @@
     });
 
     deleteBtn.addEventListener("click", async () => {
-      if (!confirm(`Delete ${selected.size} item(s)? This cannot be undone.`)) return;
+      const msg = t("multiselect.confirmDelete").replace("{n}", count(selected.size, "item"));
+      if (!confirm(msg)) return;
       const toDelete = photos.filter((p) => selected.has(p.id));
       deleteBtn.disabled = true;
       await Promise.all(toDelete.map((p) => deletePhoto(albumId, p)));
@@ -272,7 +275,7 @@
     moveBtn.addEventListener("click", async () => {
       const albums = (await listAlbums()).filter((a) => a.id !== albumId);
       if (!albums.length) {
-        alert("No other albums to move to yet");
+        alert(t("viewer.noOtherAlbums"));
         return;
       }
       moveSelect.innerHTML = albums.map((a) => `<option value="${a.id}">${a.name}</option>`).join("");
