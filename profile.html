@@ -50,19 +50,6 @@
     border: 3px solid rgba(255,255,255,0.85);
   }
   .profile-name { font-family: var(--font-title); font-size: 22px; color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,0.35); }
-  .role-badge {
-    display: none;
-    margin-top: 10px;
-    padding: 5px 14px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-  }
-  .role-badge.is-visible { display: inline-block; }
-  .role-badge--admin { background: var(--gold); color: var(--ink); }
-  .role-badge--participant { background: rgba(255,255,255,0.85); color: var(--muted-2); }
-  .role-badge--viewer { background: rgba(255,255,255,0.6); color: var(--muted-2); }
 
   .settings-section + .settings-section { margin-top: 4px; }
   .settings-section__label {
@@ -104,12 +91,6 @@
     font-size: 15px;
   }
   .members-list__row + .members-list__row { border-top: 1px solid var(--divider-2); }
-  .members-list__role { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
-  .members-list__code-label { font-size: 13px; color: var(--muted-2); }
-  .members-list__code-value {
-    font-family: monospace; font-size: 14px; font-weight: 700; color: var(--ink);
-    background: none; border: none; cursor: pointer; padding: 4px 8px;
-  }
 
   .toast {
     position: absolute;
@@ -165,7 +146,6 @@
         <div class="profile-header">
           <div class="profile-avatar" id="profile-avatar">?</div>
           <div class="profile-name" id="profile-name">…</div>
-          <span class="role-badge" id="role-badge"></span>
         </div>
       </div>
 
@@ -179,8 +159,8 @@
         </div>
       </div>
 
-      <div class="settings-section" id="admin-tools-section" style="display:none;">
-        <div class="settings-section__label" data-i18n="profile.sectionAdminTools">ADMIN TOOLS</div>
+      <div class="settings-section">
+        <div class="settings-section__label" data-i18n="profile.sectionSharing">SHARING</div>
         <div class="settings-list">
           <button class="settings-row" type="button" id="row-invite">
             <span data-i18n="profile.invite">Invite links</span>
@@ -190,13 +170,8 @@
             <span data-i18n="profile.members">Manage members</span>
             <span class="settings-row__value" id="members-count">…</span>
           </button>
-          <button class="settings-row" type="button" id="row-codes">
-            <span data-i18n="profile.accessCodes">Access codes</span>
-            <span class="settings-row__value">▾</span>
-          </button>
         </div>
         <div class="members-list" id="members-list"></div>
-        <div class="members-list" id="codes-list"></div>
       </div>
 
       <div class="settings-section">
@@ -243,31 +218,17 @@
 
   <script type="module">
     import { requireAuth, getGuestName, signOutGuest } from "./js/auth.js";
-    import { listGuests, getGuest, getEventInfo } from "./js/data.js";
+    import { listGuests } from "./js/data.js";
     import { applyTranslations, t, getLang, setLang, LANGUAGES } from "./js/i18n.js";
 
     applyTranslations();
-    const user = await requireAuth();
+    await requireAuth();
 
     const name = getGuestName();
     document.getElementById("profile-name").textContent = name;
     document.getElementById("profile-avatar").textContent = name.charAt(0).toUpperCase();
 
-    const ROLE_LABEL_KEY = { admin: "profile.roleAdmin", participant: "profile.roleParticipant", viewer: "profile.roleViewer" };
-
-    const roleBadge = document.getElementById("role-badge");
-    const adminToolsSection = document.getElementById("admin-tools-section");
-    getGuest(user.uid).then((me) => {
-      const role = me?.role || "viewer";
-      const isAdmin = role === "admin";
-      roleBadge.textContent = t(ROLE_LABEL_KEY[role]);
-      roleBadge.className = `role-badge is-visible role-badge--${role}`;
-      adminToolsSection.style.display = isAdmin ? "" : "none";
-      if (isAdmin) {
-        loadGuests().catch(() => { membersCount.textContent = "—"; });
-        loadAccessCodes();
-      }
-    });
+    loadGuests().catch(() => { membersCount.textContent = "—"; });
 
     const toast = document.getElementById("toast");
     function showToast(message) {
@@ -300,7 +261,6 @@
         .map(
           (g) => `<div class="members-list__row">
             <span>${escapeHtml(g.name || "Guest")}</span>
-            <span class="members-list__role">${t(ROLE_LABEL_KEY[g.role] || "profile.roleViewer")}</span>
           </div>`
         )
         .join("");
@@ -314,35 +274,6 @@
 
     document.getElementById("row-members").addEventListener("click", () => {
       membersList.classList.toggle("is-open");
-    });
-
-    const codesList = document.getElementById("codes-list");
-    async function loadAccessCodes() {
-      const event = await getEventInfo();
-      const rows = [
-        ["profile.codeAdmin", event?.adminCode],
-        ["profile.codeParticipant", event?.participantCode],
-        ["profile.codeViewer", event?.viewerCode],
-      ];
-      codesList.innerHTML = rows
-        .map(
-          ([labelKey, code]) => `<div class="members-list__row">
-            <span class="members-list__code-label">${t(labelKey)}</span>
-            <button type="button" class="members-list__code-value" data-code="${escapeHtml(code || "")}">${escapeHtml(code || t("profile.codeNotSet"))}</button>
-          </div>`
-        )
-        .join("");
-      codesList.querySelectorAll(".members-list__code-value").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          if (!btn.dataset.code) return;
-          await navigator.clipboard.writeText(btn.dataset.code);
-          showToast(t("profile.codeCopied"));
-        });
-      });
-    }
-
-    document.getElementById("row-codes").addEventListener("click", () => {
-      codesList.classList.toggle("is-open");
     });
 
     // ---- Language picker ----

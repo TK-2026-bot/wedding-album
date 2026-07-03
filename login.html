@@ -7,7 +7,12 @@
 <link rel="stylesheet" href="css/design-system.css">
 <style>
   /* Full-bleed photo: its aspect ratio (0.462) already matches the phone
-     canvas (390:844), so it covers the whole screen with no crop/stretch. */
+     canvas (390:844), so it covers the whole screen with no crop/stretch.
+     The image itself already contains the title, subtitle, name field and
+     Continue button as designed in the original mockup — the elements
+     below are transparent/opaque overlays positioned pixel-for-pixel on
+     top of those baked shapes so the page is interactive while looking
+     identical to the approved design. */
   .login-bg {
     position: absolute; inset: 0;
     width: 100%; height: 100%;
@@ -21,66 +26,49 @@
     clip: rect(0,0,0,0); white-space: nowrap; border: 0;
   }
 
-  /* A dimming strip sits behind the three pills, spanning the whole area
-     where the original mockup had baked-in fake UI (one field + button +
-     install hint). It's there purely as insurance in the gaps *between*
-     the pills — since the pills themselves are fully opaque, only the
-     narrow gaps could otherwise let those baked pixels show through. */
-  .login-scrim {
+  /* Bounds measured directly from the source image (686×1485):
+     pill/button span x:56–630, name field y:701–811, button y:848–962. */
+  .login-name {
     position: absolute;
-    left: 8.15%; width: 83.7%;
-    top: 44.7%; height: 34.5%;
+    left: 8.163%; width: 83.673%;
+    top: 47.205%; height: 7.407%;
     z-index: 1;
-    background: rgba(8, 28, 42, 0.8);
-    border-radius: 14px;
-  }
-
-  .login-form {
-    position: absolute;
-    left: 8.15%; width: 83.7%;
-    top: 44.7%; height: 34.5%;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    gap: 3.2%;
-  }
-  .login-row { flex: 1; position: relative; }
-  .login-row input {
-    width: 100%; height: 100%;
     border: none;
-    border-radius: 14px;
-    padding: 0 18px;
+    border-radius: 999px;
+    background: #FFFFFF;
+    padding: 0 20px;
     font-size: 16px;
     font-family: var(--font-ui);
     color: var(--ink);
-    background: #ffffff;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
   }
-  .login-row input:focus { outline: 2px solid var(--gold-text); }
+  .login-name::placeholder { color: var(--muted); }
+  .login-name:focus { outline: 2px solid var(--gold-text); }
 
   .login-submit {
-    flex: 1;
+    position: absolute;
+    left: 8.163%; width: 83.673%;
+    top: 57.098%; height: 7.677%;
+    z-index: 1;
     border: none;
-    border-radius: 14px;
+    border-radius: 999px;
     background: var(--gold);
     color: var(--ink);
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 700;
     font-family: var(--font-ui);
     cursor: pointer;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
   }
   .login-submit:disabled { opacity: .6; cursor: default; }
 
   .login-error {
     position: absolute;
-    left: 8.15%; width: 83.7%;
-    top: calc(44.7% + 34.5% + 12px);
+    left: 8.163%; width: 83.673%;
+    top: calc(57.098% + 7.677% + 14px);
     color: #fff;
     text-shadow: 0 1px 4px rgba(0,0,0,0.6);
     font-size: 14px;
     text-align: center;
-    z-index: 2;
+    z-index: 1;
   }
 </style>
 </head>
@@ -90,17 +78,10 @@
   <main class="app">
     <img class="login-bg" src="assets/img/login-full.jpg" alt="Mallorca Wedding — Pau &amp; Sofia, 10.07.2026, Mallorca, Spain">
     <div class="notch"></div>
-    <div class="login-scrim"></div>
 
-    <form class="login-form" id="login-form">
-      <div class="login-row">
-        <label class="sr-only" for="name" data-i18n="login.nameLabel">Your name</label>
-        <input id="name" name="name" type="text" autocomplete="name" placeholder="Your name" required>
-      </div>
-      <div class="login-row">
-        <label class="sr-only" for="code" data-i18n="login.codeLabel">Access code</label>
-        <input id="code" name="code" type="text" autocomplete="off" placeholder="Access code" required>
-      </div>
+    <form id="login-form">
+      <label class="sr-only" for="name" data-i18n="login.nameLabel">Your name</label>
+      <input class="login-name" id="name" name="name" type="text" autocomplete="name" placeholder="Your name" required>
       <button class="login-submit" type="submit" id="login-submit" data-i18n="login.continue">Continue</button>
     </form>
     <p class="login-error" id="login-error"></p>
@@ -115,7 +96,6 @@
     applyTranslations();
 
     document.getElementById("name").placeholder = t("login.nameLabel");
-    document.getElementById("code").placeholder = t("login.codeLabel");
 
     const form = document.getElementById("login-form");
     const submitBtn = document.getElementById("login-submit");
@@ -128,8 +108,7 @@
       submitBtn.textContent = t("login.signingIn");
       try {
         const name = form.name.value;
-        const code = form.code.value;
-        await signInGuest(name, code);
+        await signInGuest(name);
         window.location.href = "index.html";
       } catch (err) {
         errorEl.textContent = t(err.message) || t("login.errGeneric");

@@ -25,11 +25,6 @@ const albumsCol = () => collection(db, "events", EVENT_ID, "albums");
 const photosCol = (albumId) =>
   collection(db, "events", EVENT_ID, "albums", albumId, "photos");
 
-export async function getEventInfo() {
-  const snap = await getDoc(doc(db, "events", EVENT_ID));
-  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
-}
-
 export async function listAlbums() {
   const q = query(albumsCol(), orderBy("createdAt", "desc"));
   const snap = await getDocs(q);
@@ -181,9 +176,4 @@ export async function listGuests() {
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-}
-
-export async function getGuest(uid) {
-  const snap = await getDoc(doc(db, "events", EVENT_ID, "guests", uid));
-  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
