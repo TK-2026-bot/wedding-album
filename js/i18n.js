@@ -109,7 +109,6 @@ const STRINGS = {
   "newAlbum.errNoName": { en: "Give the album a name", ca: "Posa un nom a l'àlbum", es: "Ponle un nombre al álbum", ru: "Введите название альбома" },
   "newAlbum.errCreate": { en: "Could not create the album", ca: "No s'ha pogut crear l'àlbum", es: "No se pudo crear el álbum", ru: "Не удалось создать альбом" },
 
-  "profile.title": { en: "Profile", ca: "Perfil", es: "Perfil", ru: "Профиль" },
   "profile.language": { en: "Language", ca: "Idioma", es: "Idioma", ru: "Язык" },
   "profile.invite": { en: "Invite links", ca: "Enllaços d'invitació", es: "Enlaces de invitación", ru: "Пригласительные ссылки" },
   "profile.copy": { en: "Copy", ca: "Copia", es: "Copiar", ru: "Копировать" },
