@@ -172,7 +172,7 @@ body {
   position: relative;
   background: linear-gradient(180deg, #C9B68C 0%, #6E8C95 55%, #16323F 100%);
 }
-.ph--blue  { background: linear-gradient(180deg, #BFE0EE 0%, #5B879B 55%, #16323F 100%); }
+.ph--blue  { background: linear-gradient(180deg, #BFE0EE 0%, #5B879B 55%, #2C5364 100%); }
 .ph--teal  { background: linear-gradient(180deg, #9BC4D2 0%, #3E6B7C 60%, #16323F 100%); }
 
 /* ---------- FAB (spec §5): 56×56, золотая, с тенью ---------- */
