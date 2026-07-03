@@ -6,81 +6,71 @@
 <title>Welcome — Mallorca Wedding</title>
 <link rel="stylesheet" href="css/design-system.css">
 <style>
-  .login-hero {
-    position: relative;
-    flex: 0 0 auto;
-    height: 46%;
-    overflow: hidden;
-  }
-  .login-hero img {
+  /* Full-bleed photo: its aspect ratio (0.462) already matches the phone
+     canvas (390:844), so it covers the whole screen with no crop/stretch. */
+  .login-bg {
+    position: absolute; inset: 0;
     width: 100%; height: 100%;
     object-fit: cover;
-    display: block;
+    z-index: 0;
   }
-  .login-hero::after {
-    content: "";
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  .login-form {
     position: absolute; inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0) 55%, var(--bg) 100%);
-  }
-  .login-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 8px 28px 28px;
-  }
-  .login-title {
-    font-family: var(--font-title);
-    font-size: 30px;
-    text-align: center;
-    margin-bottom: 6px;
-  }
-  .login-sub {
-    text-align: center;
-    color: var(--muted);
-    font-size: 14px;
-    margin-bottom: 26px;
+    z-index: 2;
   }
   .login-field {
-    margin-bottom: 14px;
-  }
-  .login-field label {
-    display: block;
-    font-size: 13px;
-    color: var(--muted-2);
-    margin-bottom: 6px;
+    position: absolute;
+    left: 8.15%; width: 83.7%;
+    height: 6.9%;
   }
   .login-field input {
-    width: 100%;
-    border: 1px solid var(--divider-2);
+    width: 100%; height: 100%;
+    border: none;
     border-radius: 14px;
-    padding: 16px 18px;
+    padding: 0 18px;
     font-size: 16px;
     font-family: var(--font-ui);
     color: var(--ink);
-    background: var(--bg-alt);
+    background: rgba(255,255,255,0.96);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
   }
   .login-field input:focus { outline: 2px solid var(--gold-text); }
+  #field-name { top: 47.4%; }
+  #field-code { top: 56.1%; }
+
   .login-submit {
-    margin-top: 8px;
-    width: 100%;
+    position: absolute;
+    left: 8.15%; width: 83.7%;
+    top: 64.7%; height: 6.9%;
     border: none;
     border-radius: 14px;
-    padding: 17px;
     background: var(--gold);
     color: var(--ink);
     font-size: 16px;
     font-weight: 700;
     font-family: var(--font-ui);
     cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
   }
   .login-submit:disabled { opacity: .6; cursor: default; }
+
   .login-error {
-    color: var(--danger);
+    position: absolute;
+    left: 8.15%; width: 83.7%;
+    top: 73.2%;
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
     font-size: 14px;
     text-align: center;
-    margin-top: 12px;
-    min-height: 18px;
   }
+
   .lang-switch {
     position: absolute;
     top: calc(12px + env(safe-area-inset-top));
@@ -111,29 +101,23 @@
   <div class="phone-frame">
   <div class="phone-ratio-box">
   <main class="app">
+    <img class="login-bg" src="assets/img/login-full.jpg" alt="Mallorca Wedding — Pau &amp; Sofia, 10.07.2026, Mallorca, Spain">
     <div class="notch"></div>
     <div class="lang-switch" id="lang-switch"></div>
-    <div class="screen">
-      <div class="login-hero">
-        <img src="assets/img/login-hero.png" alt="Mallorca Wedding — Pau &amp; Sofia, 10.07.2026, Mallorca, Spain">
+
+    <form class="login-form" id="login-form">
+      <div class="login-field" id="field-name">
+        <label class="sr-only" for="name" data-i18n="login.nameLabel">Your name</label>
+        <input id="name" name="name" type="text" autocomplete="name" placeholder="Your name" required>
       </div>
-      <form class="login-body" id="login-form">
-        <h1 class="login-title">Mallorca Wedding</h1>
-        <p class="login-sub" data-i18n="login.subtitle">Enter your name and the access code from your invitation</p>
+      <div class="login-field" id="field-code">
+        <label class="sr-only" for="code" data-i18n="login.codeLabel">Access code</label>
+        <input id="code" name="code" type="text" autocomplete="off" placeholder="Access code" required>
+      </div>
 
-        <div class="login-field">
-          <label for="name" data-i18n="login.nameLabel">Your name</label>
-          <input id="name" name="name" type="text" autocomplete="name" placeholder="Sofia" required>
-        </div>
-        <div class="login-field">
-          <label for="code" data-i18n="login.codeLabel">Access code</label>
-          <input id="code" name="code" type="text" autocomplete="off" placeholder="e.g. PAUSOFIA26" required>
-        </div>
-
-        <button class="login-submit" type="submit" id="login-submit" data-i18n="login.continue">Continue</button>
-        <p class="login-error" id="login-error"></p>
-      </form>
-    </div>
+      <button class="login-submit" type="submit" id="login-submit" data-i18n="login.continue">Continue</button>
+      <p class="login-error" id="login-error"></p>
+    </form>
   </main>
   </div>
   </div>
@@ -154,10 +138,17 @@
         btn.addEventListener("click", () => {
           setLang(btn.dataset.code);
           renderLangSwitch();
+          applyPlaceholders();
         });
       });
     }
     renderLangSwitch();
+
+    function applyPlaceholders() {
+      document.getElementById("name").placeholder = t("login.nameLabel");
+      document.getElementById("code").placeholder = t("login.codeLabel");
+    }
+    applyPlaceholders();
 
     const form = document.getElementById("login-form");
     const submitBtn = document.getElementById("login-submit");
