@@ -43,6 +43,16 @@ const STRINGS = {
     ru: "Пока нет альбомов — создайте первый.",
   },
 
+  "search.title": { en: "Search", ca: "Cerca", es: "Buscar", ru: "Поиск" },
+  "search.placeholder": { en: "Search guests", ca: "Cerca convidats", es: "Buscar invitados", ru: "Поиск гостей" },
+  "search.noGuests": { en: "No guests found", ca: "No s'ha trobat cap convidat", es: "No se encontraron invitados", ru: "Гости не найдены" },
+  "search.noPhotos": {
+    en: "No photos or videos from this guest yet",
+    ca: "Encara no hi ha fotos ni vídeos d'aquest convidat",
+    es: "Todavía no hay fotos ni vídeos de este invitado",
+    ru: "От этого гостя пока нет фото или видео",
+  },
+
   "album.emptyPhotos": {
     en: "No photos yet — tap the + button to add the first one.",
     ca: "Encara no hi ha fotos — toca el botó + per afegir-ne la primera.",

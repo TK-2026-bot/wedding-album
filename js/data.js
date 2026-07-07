@@ -1,5 +1,6 @@
 import {
   collection,
+  collectionGroup,
   doc,
   addDoc,
   getDoc,
@@ -7,6 +8,7 @@ import {
   deleteDoc,
   updateDoc,
   query,
+  where,
   orderBy,
   serverTimestamp,
   increment,
@@ -80,6 +82,15 @@ export async function listPhotos(albumId) {
   const q = query(photosCol(albumId), orderBy("createdAt", "desc"));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+// Finds every photo/video a given guest uploaded, across all albums.
+export async function listPhotosByUploader(uid) {
+  const q = query(collectionGroup(db, "photos"), where("uploadedBy", "==", uid));
+  const snap = await getDocs(q);
+  return snap.docs
+    .map((d) => ({ id: d.id, albumId: d.ref.parent.parent.id, ...d.data() }))
+    .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
 }
 
 export async function getPhoto(albumId, photoId) {
